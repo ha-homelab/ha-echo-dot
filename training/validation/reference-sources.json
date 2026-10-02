@@ -1,0 +1,26 @@
+[
+  {
+    "file": "okay_nabu.tflite",
+    "url": "https://raw.githubusercontent.com/ygelfand/echolocal/6eff3b12db168223df3871f0a56250e736d3954a/internal/host/assets/models/okay_nabu.tflite",
+    "bytes": 60264,
+    "sha256": "0689abe1912a95a3318a0d8cb2e67bad0cbcfe3e24dd6e050c75debddfb6f891"
+  },
+  {
+    "file": "okay_nabu.json",
+    "url": "https://raw.githubusercontent.com/ygelfand/echolocal/6eff3b12db168223df3871f0a56250e736d3954a/internal/host/assets/models/okay_nabu.json",
+    "bytes": 386,
+    "sha256": "6dd65604f70fe5ea9d1af73a7bf239529d1fbabc363807f45d2b22ce464ddbed"
+  },
+  {
+    "file": "okay_nabu.wav",
+    "url": "https://raw.githubusercontent.com/zserge/microwakeword/bfaf3840114ece54665c15e6e202ddb1463c3d37/testdata/okay_nabu.wav",
+    "bytes": 244474,
+    "sha256": "573d4ee677a0b0c21f37677727b55b9e65a44a7efe4dbb3bbeae450672521d05"
+  },
+  {
+    "file": "nowake.wav",
+    "url": "https://raw.githubusercontent.com/zserge/microwakeword/bfaf3840114ece54665c15e6e202ddb1463c3d37/testdata/nowake.wav",
+    "bytes": 263418,
+    "sha256": "1fa865a424e9f10bc9adfda336069bae8bbe5236e524ad7653302eee05769b9e"
+  }
+]
