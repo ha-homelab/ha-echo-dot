@@ -26,7 +26,7 @@ The last item has not yet been claimed as passed in this pilot.
 ## Extended acceptance before broader deployment
 
 1. Try 20 representative commands from the intended room. A starting target is 18 correct actions on the first attempt. Include ordinary household noise and record actual results.
-2. Measure delay from the end of the utterance to the start of the reply. Record median, p95, and maximum; p95 from 20 samples is a rough estimate. Set targets from observed performance.
+2. Measure delay from the end of the utterance to the start of the reply. For music, separately measure the time until music becomes audible; a `playing` state is not that measurement. See the [observed Sendspin startup delay](music-latency.md). Record median, p95, and maximum; p95 from 20 samples is a rough estimate. Set targets from observed performance.
 3. Check language, room names, aliases, and custom intents. A conversation answer does not prove a particular HA intent is exposed or supported by the agent.
 4. Check mute/unmute, Action and volume buttons, LED feedback, and wake-word recovery.
 5. Say Stop during replies and music, then issue another command. Confirm playback stops and listening resumes. Upstream [issue #85](https://github.com/ygelfand/echolocal/issues/85) motivates this test; it does not establish failure on every device.

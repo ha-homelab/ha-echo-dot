@@ -9,6 +9,7 @@ docs/custom-wake-word.md
 docs/known-devices.md
 docs/usb-host.md
 docs/acceptance-and-batch.md
+docs/music-latency.md
 docs/publication.md
 docs/show5-plan.md
 research/conversion.md

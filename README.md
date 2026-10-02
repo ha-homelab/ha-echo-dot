@@ -54,6 +54,7 @@ Read these in order for the first device:
 
 Supporting material:
 
+- [Music startup latency](docs/music-latency.md): distinguish HA response time from Sendspin output delay and diagnose a disturbed clock estimate.
 - [Custom Russian wake phrase](docs/custom-wake-word.md): train and validate a second phrase while retaining Okay Nabu.
 - [Training commands, in order](training/README.md): environment, data, features, training, export, calibration, frozen test, recordings, packaging, and HA configuration.
 - [Training history and unresolved results](docs/training-history.md): decisions, measured results, failed checks, and the first human trial.
