@@ -16,6 +16,8 @@ This confirms one basic end-to-end voice test. Cold power cycling, a 20-command 
 
 A custom **Привет, Мышка** model is also installed in the second slot, with Okay Nabu retained in the first. Offline evaluation and deployment are complete, with two documented hard-negative errors. The initial user trial reported a problem; diagnosis is in progress and human spoken acceptance remains unconfirmed. See the [experiment and limitations](docs/custom-wake-word.md).
 
+A separate **Привет, котик** recipe and candidate have now been trained and evaluated. The candidate remains private and undeployed: it detected 398/400 held-out synthetic positives, produced two hard-negative events, and failed strict numerical parity. No ordinary-voice Kotik recording or acceptance test has been completed. See the [Kotik stage record](docs/training-history.md#new-target-привет-котик).
+
 ## Required components
 
 - **Hardware:** an Echo Dot 2, commonly labelled RS03QR, verified as BISCUIT over USB; a USB data cable; stable power; and a compatible Linux USB host. These images are not for other Echo generations.

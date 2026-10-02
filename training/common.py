@@ -40,6 +40,44 @@ def read_config(path=DEFAULT_CONFIG):
     return cfg
 
 
+def require_profile_identity(work, cfg):
+    """Check the wake target against pinned and saved recipes without ML imports.
+
+    Older model recipes without ``synthesis_profile`` select pm-v1. A new work
+    directory may have no saved recipes yet, as with smoke/benchmark stages.
+    Training budgets and the model artifact name are deliberately not identity:
+    they may change when adapting the same phrase in a separate candidate.
+    """
+    from data.recipe import require_profile_match, synthesis_profile
+
+    def phrase(value):
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("Model wake phrase must be a nonempty string")
+        # Case and punctuation variants in the pinned synthesis vocabulary have
+        # the same target. Word changes must never be hidden by a display label.
+        return tuple(re.findall(r"[^\W_]+", value.casefold()))
+
+    name = cfg.get("synthesis_profile", "pm-v1")
+    profile = synthesis_profile(name)
+    expected = phrase(profile["wake_word"])
+    if phrase(cfg.get("wake_word")) != expected:
+        raise ValueError("Model wake phrase differs from the selected synthesis profile")
+
+    work = Path(work)
+    # This also checks a saved source recipe's seed, voices and vocabulary, so a
+    # correct profile label cannot conceal speech generated for another target.
+    require_profile_match(work, name)
+    for label, path in (("work model", work / "recipe.json"),
+                        ("synthesis source", work / "data-generation/recipe.json")):
+        if path.exists():
+            saved = json.loads(path.read_text())
+            # The original pm-v1 synthesis recipe predates this optional field;
+            # its pinned version/vocabulary were checked above instead.
+            if "wake_word" in saved and phrase(saved["wake_word"]) != expected:
+                raise ValueError(f"Saved {label} wake phrase differs from the selected synthesis profile")
+    return {"synthesis_profile": name, "wake_word": profile["wake_word"]}
+
+
 def work_dir(value):
     path = Path(value).expanduser().resolve()
     if path == path.parent or path == Path.home() or path == SOURCE.parent or path == SOURCE or SOURCE in path.parents:

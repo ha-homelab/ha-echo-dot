@@ -7,12 +7,15 @@ import tarfile
 import tempfile
 import threading
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 import zipfile
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import common
 import generate
 import librispeech
+import recipe
 
 try:
     import numpy as np
@@ -124,6 +127,88 @@ class FileTests(unittest.TestCase):
 
 
 class RecipeTests(unittest.TestCase):
+    def test_original_myshka_jobs_are_byte_for_byte_unchanged(self):
+        encoded = json.dumps(generate.make_jobs(), sort_keys=True, ensure_ascii=False).encode()
+        self.assertEqual(hashlib.sha256(encoded).hexdigest(),
+                         "a2ddfe24108c9d0cb8b6c663e0b9613ddd34e67dcdb01e8452acbc2cf1c0a643")
+        self.assertEqual(generate.make_jobs(), generate.make_jobs("pm-v1"))
+
+    def test_kotik_sources_are_new_and_partitioned_before_augmentation(self):
+        jobs = generate.make_jobs("pk-v1")
+        rows = [r for group in jobs.values() for r in group]
+        self.assertEqual(jobs, generate.make_jobs("pk-v1"))
+        old_ids = {r["source_id"] for group in generate.make_jobs().values() for r in group}
+        self.assertTrue(all(r["source_id"].startswith("pk-v1-") for r in rows))
+        self.assertFalse(old_ids & {r["source_id"] for r in rows})
+        self.assertEqual(len({r["source_id"] for r in rows}), 6500)
+        expected = {("train", 1): 3200, ("val", 1): 400, ("test", 1): 400,
+                    ("train", 0): 2000, ("val", 0): 250, ("test", 0): 250}
+        for (split, label), count in expected.items():
+            self.assertEqual(sum(r["split"] == split and r["label"] == label for r in rows), count)
+        self.assertTrue(all(r["text"].lower().replace(",", "").startswith("привет котик")
+                            for r in rows if r["label"]))
+        self.assertFalse(any("мыш" in r["text"].lower() for r in rows if r["label"]))
+        for group in jobs.values():
+            negative = {r["text"] for r in group if not r["label"]}
+            for phrase in ("Привет, мышка.", "Привет, кот.", "Привет, котики.",
+                           "Привет, кофе.", "Привет.", "Играй музыку."):
+                self.assertIn(phrase, negative)
+        cfg = json.loads((Path(__file__).parents[1] / "configs/privet-kotik.json").read_text())
+        profile = recipe.synthesis_profile(cfg["synthesis_profile"])
+        for field in ("model_id", "wake_word"):
+            self.assertEqual(cfg[field], profile[field])
+        self.assertEqual(cfg["seed"], profile["master_seed"])
+
+    def test_profile_mismatch_fails_before_download_or_synthesis(self):
+        with tempfile.TemporaryDirectory() as temp:
+            work = Path(temp)
+            root = work / "data-generation"
+            root.mkdir()
+            (root / "recipe.json").write_text(json.dumps({"version": "pm-v1"}))
+            args = SimpleNamespace(work_dir=work, stage="download", profile="pk-v1", offline=True)
+            with patch.object(generate, "download_voice") as download_voice:
+                with self.assertRaisesRegex(ValueError, "another synthesis profile"):
+                    generate.run(args)
+                download_voice.assert_not_called()
+
+    def test_model_profile_guard_also_applies_before_first_synthesis(self):
+        with tempfile.TemporaryDirectory() as temp:
+            work = Path(temp)
+            (work / "recipe.json").write_text(json.dumps({"synthesis_profile": "pk-v1"}))
+            with self.assertRaisesRegex(ValueError, "model recipe"):
+                recipe.require_profile_match(work, "pm-v1")
+            self.assertEqual(recipe.require_profile_match(work, "pk-v1")["version"], "pk-v1")
+            (work / "data-generation").mkdir()
+            profile = recipe.synthesis_profile("pk-v1")
+            saved = {"version": "pk-v1", "master_seed": profile["master_seed"],
+                     "voices": list(profile["voices"]), "positives": list(profile["positives"]),
+                     "negatives": list(profile["negatives"])}
+            path = work / "data-generation/recipe.json"
+            path.write_text(json.dumps(saved))
+            recipe.require_profile_match(work, "pk-v1")
+            saved["positives"][0] = "Привет, Мышка."
+            path.write_text(json.dumps(saved))
+            with self.assertRaisesRegex(ValueError, "vocabulary"):
+                recipe.require_profile_match(work, "pk-v1")
+
+    def test_offline_voice_cache_verifies_pins_without_network(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            folder = root / "voices/fixture"
+            folder.mkdir(parents=True)
+            card = folder / "MODEL_CARD"
+            card.write_bytes(b"Fixture license notice")
+            pin = {"license_reference": "fixture", "files": [
+                {"path": "voices/fixture/MODEL_CARD", "bytes": card.stat().st_size,
+                 "sha256": common.digest(card)}]}
+            with patch.dict(generate.VOICE_PINS, {"fixture": pin}), patch.object(generate, "download") as download:
+                result = generate.download_voice(root, "fixture", offline=True)
+                self.assertEqual(result["model_card"], "Fixture license notice")
+                download.assert_not_called()
+                card.write_bytes(b"changed")
+                with self.assertRaisesRegex(ValueError, "SHA-256 mismatch"):
+                    generate.download_voice(root, "fixture", offline=True)
+
     def test_synthesis_source_split_counts(self):
         jobs = generate.make_jobs()
         rows = [r for group in jobs.values() for r in group]

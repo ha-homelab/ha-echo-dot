@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 from types import SimpleNamespace
-from common import CORE_REVISION, DEFAULT_CONFIG, candidate_dir, read_config, sha256, work_dir, write_json
+from common import CORE_REVISION, DEFAULT_CONFIG, candidate_dir, read_config, require_profile_identity, sha256, work_dir, write_json
 
 
 def initialize(work, cfg, device="cpu"):
@@ -108,6 +108,12 @@ def main():
     parser.add_argument("--device", choices=["cpu", "metal"], default="cpu")
     args = parser.parse_args()
     work, cfg = work_dir(args.work_dir), read_config(args.config)
+    require_profile_identity(work, cfg)
+    if args.stage == "export":
+        if not args.candidate: parser.error("export requires --candidate")
+        directory = candidate_dir(work, args.candidate)
+        saved = json.loads((directory / "recipe.json").read_text())
+        if saved["config"] != cfg: raise ValueError("Export recipe differs from trained recipe")
     tf = initialize(work, cfg, args.device)
     import numpy as np
     model = build(cfg)
@@ -131,10 +137,6 @@ def main():
         samples[0, 0, :2] = [0, 26]
         path = export(model, work / "smoke-export", samples, cfg)
     else:
-        if not args.candidate: parser.error("export requires --candidate")
-        directory = candidate_dir(work, args.candidate)
-        saved = json.loads((directory / "recipe.json").read_text())
-        if saved["config"] != cfg: raise ValueError("Export recipe differs from trained recipe")
         completed = json.loads((directory / "training-complete.json").read_text())
         if sha256(directory / "best.weights.h5") != completed["weights_sha256"]:
             raise ValueError("Completed training weights changed")

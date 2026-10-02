@@ -10,7 +10,7 @@ import shlex
 import shutil
 import subprocess
 import sys
-from common import CORE_REVISION, DEFAULT_CONFIG, SOURCE, read_config, sha256, work_dir, write_json
+from common import CORE_REVISION, DEFAULT_CONFIG, SOURCE, read_config, require_profile_identity, sha256, work_dir, write_json
 
 STAGES=("doctor","setup","build","smoke","benchmark","voices","synth-smoke","synth-full",
         "verify-data","background","librispeech","features","import-recording","features-real",
@@ -82,12 +82,13 @@ def delegated(stage,work,config,extra):
     py=work/".venv/bin/python"
     wd=["--work-dir",str(work)]
     cfg=["--config",str(config)]
+    profile=["--profile",read_config(config).get("synthesis_profile","pm-v1")]
     routes={
         "smoke":["model.py","smoke",*wd,*cfg],"benchmark":["model.py","benchmark",*wd,*cfg],
-        "voices":["data/generate.py",*wd,"--stage","download"],
-        "synth-smoke":["data/generate.py",*wd,"--stage","smoke"],
-        "synth-full":["data/generate.py",*wd,"--stage","full"],
-        "verify-data":["data/verify.py",*wd],
+        "voices":["data/generate.py",*wd,"--stage","download",*profile],
+        "synth-smoke":["data/generate.py",*wd,"--stage","smoke",*profile],
+        "synth-full":["data/generate.py",*wd,"--stage","full",*profile],
+        "verify-data":["data/verify.py",*wd,*profile],
         "background":["data/background.py","all",*wd],
         "librispeech":["data/librispeech.py","all",*wd],
         "features":["features.py",*wd,*cfg],"features-real":["features.py",*wd,*cfg,"--kind","real"],
@@ -119,6 +120,9 @@ def main():
     work=work_dir(args.work_dir)
     config=Path(args.config).resolve() if args.config else (work/"recipe.json" if (work/"recipe.json").exists() else DEFAULT_CONFIG)
     cfg=read_config(config)
+    if args.stage in ("setup", "smoke", "benchmark", "voices", "synth-smoke", "synth-full",
+                      "verify-data", "features", "features-real", "train", "export") and "--help" not in args.stage_args:
+        require_profile_identity(work,cfg)
     saved_recipe=work/"recipe.json"
     if args.stage=="setup" and saved_recipe.exists() and json.loads(saved_recipe.read_text())!=cfg:
         raise ValueError("Work directory already has a different recipe; use a new work directory")

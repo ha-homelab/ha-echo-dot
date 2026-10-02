@@ -28,6 +28,7 @@ training/DELIVERY.md
 training/README.md
 training/common.py
 training/configs/privet-myshka.json
+training/configs/privet-kotik.json
 training/data/README.md
 training/data/background.py
 training/data/common.py
@@ -62,3 +63,4 @@ training/validation/main.go
 training/validation/prepare_librispeech_eval.py
 training/validation/reference-sources.json
 training/validation/test_evaluate.py
+training/test_warm_start.py

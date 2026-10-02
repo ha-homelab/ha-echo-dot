@@ -7,6 +7,7 @@ from pathlib import Path
 import wave
 
 from common import digest, inside
+from recipe import SYNTHESIS_PROFILES, require_profile_match
 
 
 def require(value, message):
@@ -14,13 +15,14 @@ def require(value, message):
         raise ValueError(message)
 
 
-def verify_dataset(work: Path, stage="full") -> dict:
+def verify_dataset(work: Path, stage="full", profile_name="pm-v1") -> dict:
     import numpy as np
     from generate import make_jobs
     root = inside(work, "data-generation")
+    require_profile_match(work, profile_name)
     manifest = root / f"manifest-{stage}.jsonl"
     rows = [json.loads(x) for x in manifest.read_text().splitlines()]
-    expected_jobs = make_jobs()
+    expected_jobs = make_jobs(profile_name)
     if stage == "smoke":
         expected_jobs = {v: jobs[:32] for v, jobs in expected_jobs.items()}
     expected = {x["source_id"]: x for jobs in expected_jobs.values() for x in jobs}
@@ -54,7 +56,8 @@ def verify_dataset(work: Path, stage="full") -> dict:
         counts[key] = counts.get(key, 0) + 1
     if stage == "full":
         require(all_paths == {p.resolve() for p in (root / "wav").glob("*/*/*.wav")}, "Unexpected extra WAV files")
-    return {"status": "passed", "stage": stage, "wav_files": len(rows), "counts": counts,
+    return {"status": "passed", "stage": stage, "profile": profile_name, "wav_files": len(rows), "counts": counts,
+            "synthesis_recipe_sha256": digest(root / "recipe.json"),
             "manifest_sha256": digest(manifest), "format": "16000 Hz mono signed PCM16",
             "all_source_ids_unique": True, "all_waveform_sha256_unique": True,
             "source_recipe_and_partition_verified": True, "all_wav_hashes_verified": True,
@@ -67,8 +70,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--work-dir", type=Path, required=True)
     parser.add_argument("--stage", choices=("smoke", "full"), default="full")
+    parser.add_argument("--profile", choices=tuple(SYNTHESIS_PROFILES), default="pm-v1")
     args = parser.parse_args()
-    print(json.dumps(verify_dataset(args.work_dir.resolve(), args.stage), indent=2))
+    print(json.dumps(verify_dataset(args.work_dir.resolve(), args.stage, args.profile), indent=2))
 
 
 if __name__ == "__main__":

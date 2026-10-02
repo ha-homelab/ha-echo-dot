@@ -1,4 +1,4 @@
-"""Public source pins and the unchanged initial Russian synthesis vocabulary."""
+"""Pinned synthesis profiles; the original pm-v1 vocabulary remains unchanged."""
 
 REVISION = 'c10ece1aade47bb51c153c893d14e5bf8e5b7117'
 
@@ -213,3 +213,86 @@ SYNTHESIS_PACKAGES = {'numpy': '1.26.4',
  'onnxruntime': '1.30.0',
  'piper-tts': '1.3.0',
  'scipy': '1.17.1'}
+
+# A different wake phrase is a new source population, never a relabelled pm-v1
+# positive. Keep profile seeds, source prefixes and vocabulary reviewable here.
+KOTIK_POSITIVES = (
+    'Привет, котик.', 'Привет котик!', 'Привет, котик?',
+    'Привет котик', 'Привет, Котик!', 'Привет, котик',
+)
+
+KOTIK_NEGATIVES = (
+    'Привет, мышка.', 'Привет, Мышка!', 'Привет, Мишка.', 'Привет, Миша.',
+    'Привет, кот.', 'Привет, котики.', 'Привет, котята.', 'Привет, котёнок.',
+    'Привет, кошка.', 'Привет, Костя.', 'Привет, кофе.', 'Привет, Коля.',
+    'Привет, Катя.', 'Привет, Котя.', 'Привет, компьютер.', 'Привет, кекс.',
+    'Котик.', 'Кот.', 'Котики.', 'Котёнок.', 'Кошка.', 'Котята.', 'Кофе.',
+    'Привет.', 'Привет всем.', 'Всем привет.', 'Привет, как дела?',
+    'Передай привет котику.', 'Передай привет Косте.', 'Котик, привет.',
+    'Котик сидит на диване.', 'Котик спит.', 'Котик, иди сюда.',
+    'Где наш котик?', 'Погладь котика.', 'Котики играют.', 'Кот пьёт воду.',
+    'Кошка сидит у окна.', 'Котёнок играет с мячом.', 'Приветливый кот.',
+    'Я хочу кофе.', 'Сделай кофе, пожалуйста.', 'Принеси кофе.',
+    'Кофе уже готов.', 'Кофейник стоит на столе.',
+    'Добрый день.', 'Доброе утро.', 'Добрый вечер.', 'До свидания.',
+    'Включи свет.', 'Выключи свет.', 'Поставь таймер на пять минут.',
+    'Сколько сейчас времени?', 'Какая завтра погода?', 'Сделай потише.',
+    'Сделай погромче.', 'Останови музыку.', 'Включи музыку.', 'Играй музыку.',
+    'Включи радио.', 'Следующий трек.', 'Открой дверь.', 'Закрой шторы.',
+    'Включи свет в спальне.', 'Выключи свет на кухне.',
+    'Сколько осталось до конца таймера?', 'Я сейчас на кухне.',
+    'Завтра утром будет дождь.', 'Где лежат ключи?',
+    'Мне нужно закончить работу.', 'Пора идти спать.', 'Пойдём гулять.',
+    'Пожалуйста, принеси воды.', 'Спасибо, всё готово.',
+    'Мы сегодня смотрим кино.', 'Я открою приложение.', 'Проверь сообщение.',
+    'Пора приготовить ужин.', 'Можешь закрыть окно?', 'Телефон лежит на столе.',
+    'Я вернусь через десять минут.', 'Расскажи, что случилось.',
+    'Давай поговорим об этом завтра.', 'Она сказала привет и ушла.',
+    'Компьютер не видит мышку.', 'Алекса.', 'Окей, Набу.', 'Алиса.', 'Маруся.', 'Стоп.',
+)
+
+SYNTHESIS_PROFILES = {
+    'pm-v1': {
+        'version': 'pm-v1', 'model_id': 'privet_myshka_v1', 'wake_word': 'Привет, Мышка',
+        'master_seed': MASTER_SEED, 'voices': VOICES,
+        'positives': POSITIVES, 'negatives': NEGATIVES,
+    },
+    'pk-v1': {
+        'version': 'pk-v1', 'model_id': 'privet_kotik_v1', 'wake_word': 'Привет, котик',
+        'master_seed': 2026100204, 'voices': VOICES,
+        'positives': KOTIK_POSITIVES, 'negatives': KOTIK_NEGATIVES,
+        'pronunciation': 'Russian pri-VET, KO-tik: stress on the second syllable of привет '
+                         'and the first syllable of котик. Plain Russian spelling; '
+                         'Piper phonemes are retained for review. Human audition remains separate.',
+    },
+}
+
+
+def synthesis_profile(name='pm-v1'):
+    """Return a separate profile mapping, without mutating shared defaults."""
+    if name not in SYNTHESIS_PROFILES:
+        raise ValueError(f'Unknown synthesis profile: {name}')
+    return dict(SYNTHESIS_PROFILES[name])
+
+
+def require_profile_match(work, name):
+    """Reject a conflicting model recipe or saved synthesis recipe before work."""
+    import json
+    from pathlib import Path
+    work = Path(work)
+    profile = synthesis_profile(name)
+    model_recipe = work / 'recipe.json'
+    if model_recipe.exists():
+        cfg = json.loads(model_recipe.read_text())
+        if cfg.get('synthesis_profile', 'pm-v1') != name:
+            raise ValueError('Work directory model recipe selects another synthesis profile')
+    saved = work / 'data-generation/recipe.json'
+    if saved.exists():
+        data = json.loads(saved.read_text())
+        if data.get('version') != name:
+            raise ValueError('Work directory already contains another synthesis profile; use a new directory')
+        expected = {'master_seed': profile['master_seed'], 'voices': list(profile['voices']),
+                    'positives': list(profile['positives']), 'negatives': list(profile['negatives'])}
+        if any(data.get(key) != value for key, value in expected.items()):
+            raise ValueError('Saved synthesis recipe seed, voices or vocabulary differs from the pinned profile')
+    return profile
