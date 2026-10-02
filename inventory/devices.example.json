@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "note": "Synthetic template, not an observed device. Copy to devices.local.json and fill one record per physical speaker. Store credentials and dumps separately; include references only.",
+  "devices": [
+    {
+      "asset_id": "echo-001",
+      "room": null,
+      "model_label": null,
+      "generation": null,
+      "codename_verified": null,
+      "serial_reference": null,
+      "stock_firmware_version": null,
+      "android_sdk": null,
+      "unlock_method_version": null,
+      "recovery_verified": false,
+      "backup_reference": null,
+      "backup_sha256_reference": null,
+      "echolocal_version": null,
+      "wifi_mac": null,
+      "reserved_ip": null,
+      "ha_instance": null,
+      "ha_area": null,
+      "ha_pipeline": null,
+      "esphome_key_secret_reference": null,
+      "status": "unidentified",
+      "acceptance_record": {
+        "voice_command_confirmed": false,
+        "physical_audio_confirmed": false,
+        "control_action_confirmed": false,
+        "cold_power_cycle_tested": false,
+        "day_stability_tested": false,
+        "notes": null
+      },
+      "current_ip": null,
+      "installed_name": null,
+      "wake_word": null,
+      "ha_config_entry_id": null,
+      "ha_device_id": null,
+      "ha_entity": null,
+      "ha_media_player": null,
+      "ha_pipeline_id": null
+    }
+  ]
+}
