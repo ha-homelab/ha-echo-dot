@@ -104,6 +104,19 @@ class PreparePublicReleaseTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, r"Symlinks cannot be exported"):
                 MODULE.public_files()
 
+    def test_rejects_symlink_parent_outside_workspace(self):
+        """An allowed leaf name must not escape through a symlinked directory."""
+        root, manifest = self._synthetic_workspace()
+        outside = root.parent / "outside-docs"
+        outside.mkdir()
+        (outside / "guide.md").write_text("synthetic outside guide\n", encoding="utf-8")
+        (root / "docs").symlink_to(outside, target_is_directory=True)
+        manifest.write_text("docs/guide.md\n", encoding="utf-8")
+        self.assertFalse((root / "docs" / "guide.md").is_symlink())
+        with self._bind(root, manifest):
+            with self.assertRaisesRegex(ValueError, r"Symlinks cannot be exported"):
+                MODULE.public_files()
+
     def test_rejects_empty_manifest_and_destination_inside_workspace(self):
         """Empty manifest and in-tree destinations fail without creating an export."""
         root, manifest = self._synthetic_workspace()
