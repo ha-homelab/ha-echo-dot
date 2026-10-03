@@ -48,6 +48,7 @@ training/recordings.py
 training/requirements-macos-arm64.lock.txt
 training/requirements.txt
 training/test_delivery.py
+training/test_dependency_security.py
 training/test_pipeline.py
 training/train.py
 training/validation/COMPATIBILITY.md

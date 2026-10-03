@@ -8,7 +8,7 @@ The reference target is **Echo Dot 2 / EchoLocal 0.0.8**, using its pinned Go mi
 
 ## Where each component runs
 
-All commands through packaging run on a **training computer**, not on the Echo, Synology USB host, or Home Assistant. The reference computer uses Apple Silicon, macOS, Python 3.11.16 and CPU TensorFlow. The direct dependency list is provided for other compatible Unix hosts, but a fresh Linux installation has not been validated here. Go 1.26+, Git, `uv`, and `ffmpeg` are prerequisites. `setup` downloads Python packages and a pinned builder; it does not install those system tools.
+All commands through packaging run on a **training computer**, not on the Echo, Synology USB host, or Home Assistant. The reference computer uses Apple Silicon, macOS 14 or newer, Python 3.11.16 and CPU TensorFlow. The direct dependency list is provided for other compatible Unix hosts, but a fresh Linux installation has not been validated here. Go 1.26+, Git, `uv`, and `ffmpeg` are prerequisites. `setup` downloads Python packages and a pinned builder; it does not install those system tools.
 
 Reserve approximately **50 GiB of free disk space** for the reference run. The retained historical work directory occupied about 36 GiB, including cached archives, features and models; future runs and personal recordings may require more. A new run also downloads several gigabytes of public data. See the [data provenance and source terms](data/README.md) before downloading.
 
@@ -63,10 +63,27 @@ For the tested macOS ARM64 package set:
 
 ```bash
 python3 training/pipeline.py --work-dir "$WORK" setup --reference-lock
+uv pip check --python "$WORK/.venv/bin/python"
+"$WORK/.venv/bin/python" training/test_dependency_security.py -v
 python3 training/pipeline.py --work-dir "$WORK" build
 ```
 
 On another compatible Unix host, omit `--reference-lock`; setup uses [requirements.txt](requirements.txt) instead of the complete [macOS lock](requirements-macos-arm64.lock.txt). It saves the actual package list as `environment-resolved.txt`. Run Python stages through the pipeline or `"$WORK/.venv/bin/python"`, not an unrelated system environment. Do not set `TF_USE_LEGACY_KERAS=1`.
+
+The current environment pairs protobuf 5.29.6 with TensorFlow 2.18.1. Protobuf
+4.25.9 is affected by [CVE-2026-0994](https://github.com/advisories/GHSA-7gcm-g887-7qv7),
+and TensorFlow 2.16.2 requires protobuf below 5. Updating protobuf alone therefore
+cannot produce a valid installation. The macOS lock also updates TensorBoard,
+tf-keras and ml-dtypes to compatible versions while retaining unrelated pins.
+Use a new work directory for the changed environment. Historical training and
+accuracy results remain measurements of their original environment; they do not
+validate a newly trained model or authorize a device update.
+
+The updated lock passed a clean macOS ARM64/Python 3.11 installation and package
+compatibility check, the nested-Any regression test, TensorFlow/Keras imports,
+and the pinned builder's synthetic INT8/UINT8 export with exact-Go inference.
+The regression test fails with protobuf 4.25.9 and passes with 5.29.6. No model
+training, acoustic acceptance or device rollout is claimed by these checks.
 
 The builder is `kahrendt/microWakeWord` at `a70bd740d4e79ee8a8bb3db843fe862b88d5d6b0`. The Go validator imports `zserge/microwakeword` at `bfaf3840114ece54665c15e6e202ddb1463c3d37`, the revision used by EchoLocal 0.0.8. `build` creates `WORK/bin/validate`, `WORK/bin/gofeatures` and a source/binary hash receipt. It refuses to silently replace a changed validator in a recorded run.
 
