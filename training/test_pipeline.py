@@ -2,6 +2,7 @@
 import copy
 import json
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -174,6 +175,24 @@ class WorkflowContracts(unittest.TestCase):
                     self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertIn('--profile pk-v1', result.stdout)
                     self.assertNotIn('--profile pm-v1', result.stdout)
+            self.assertFalse(destination.exists())
+
+    def test_delegated_data_profile_cannot_override_config_without_saved_recipe(self):
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory)/"absent"
+            config = Path(__file__).parent/"configs/privet-kotik.json"
+            for stage in ("voices", "synth-smoke", "synth-full", "verify-data"):
+                for override in (["--profile", "pm-v1"], ["--profile=pm-v1"]):
+                    with self.subTest(stage=stage, override=override):
+                        result = subprocess.run([
+                            sys.executable, str(Path(__file__).with_name("pipeline.py")),
+                            "--work-dir", str(destination), "--config", str(config),
+                            "--dry-run", stage, *override,
+                        ], capture_output=True, text=True)
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        command = shlex.split(result.stdout.strip())
+                        # The delegated argparse CLI takes its final profile option.
+                        self.assertEqual(command[-2:], ["--profile", "pk-v1"])
             self.assertFalse(destination.exists())
 
     def test_build_help_has_no_side_effects(self):

@@ -102,6 +102,10 @@ def delegated(stage,work,config,extra):
         "stage-ha":["delivery.py","stage"],
     }
     script,*parameters=routes[stage]
+    if stage in ("voices", "synth-smoke", "synth-full", "verify-data"):
+        # The configured source identity remains authoritative even before setup
+        # writes recipe.json; delegated argparse options otherwise use the last value.
+        extra=[*extra,*profile]
     return [str(py),str(SOURCE/script),*parameters,*extra]
 
 

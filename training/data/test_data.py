@@ -191,6 +191,36 @@ class RecipeTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "vocabulary"):
                 recipe.require_profile_match(work, "pk-v1")
 
+    def test_saved_wake_phrase_guard_allows_legacy_but_rejects_relabelled_sources(self):
+        import verify
+        with tempfile.TemporaryDirectory() as temp:
+            work = Path(temp)
+            path = work / "data-generation/recipe.json"
+            path.parent.mkdir()
+            profile = recipe.synthesis_profile("pk-v1")
+            saved = {"version": "pk-v1", "master_seed": profile["master_seed"],
+                     "voices": list(profile["voices"]), "positives": list(profile["positives"]),
+                     "negatives": list(profile["negatives"])}
+            for legacy in (True, False):
+                if not legacy:
+                    saved["wake_word"] = profile["wake_word"]
+                path.write_text(json.dumps(saved))
+                self.assertEqual(recipe.require_profile_match(work, "pk-v1")["version"], "pk-v1")
+            saved["wake_word"] = "Привет, Мышка"
+            path.write_text(json.dumps(saved))
+            before = path.read_bytes()
+            with self.assertRaisesRegex(ValueError, "synthesis source wake phrase"):
+                recipe.require_profile_match(work, "pk-v1")
+            args = SimpleNamespace(work_dir=work, stage="download", profile="pk-v1", offline=True)
+            with patch.object(generate, "download_voice") as download_voice:
+                with self.assertRaisesRegex(ValueError, "synthesis source wake phrase"):
+                    generate.run(args)
+                download_voice.assert_not_called()
+            with self.assertRaisesRegex(ValueError, "synthesis source wake phrase"):
+                verify.verify_dataset(work, "smoke", "pk-v1")
+            self.assertEqual(path.read_bytes(), before)
+            self.assertEqual(list(work.rglob("*")), [path.parent, path])
+
     def test_offline_voice_cache_verifies_pins_without_network(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

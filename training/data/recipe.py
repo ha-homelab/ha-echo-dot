@@ -295,4 +295,6 @@ def require_profile_match(work, name):
                     'positives': list(profile['positives']), 'negatives': list(profile['negatives'])}
         if any(data.get(key) != value for key, value in expected.items()):
             raise ValueError('Saved synthesis recipe seed, voices or vocabulary differs from the pinned profile')
+        if 'wake_word' in data and data['wake_word'] != profile['wake_word']:
+            raise ValueError('Saved synthesis source wake phrase differs from the pinned profile')
     return profile
