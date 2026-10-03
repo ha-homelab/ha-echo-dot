@@ -1,9 +1,11 @@
 """Bounded training with validation-only checkpoint selection and explicit inputs."""
 import argparse
+from contextlib import suppress
 import json
 import math
 from pathlib import Path
 import re
+import tempfile
 import time
 from common import DEFAULT_CONFIG, candidate_dir, read_config, require_profile_identity, sha256, work_dir, write_json
 
@@ -71,12 +73,23 @@ def compile_for_training(model, tf, budget, initial=None):
 
 
 def checkpoint_if_better(model, destination, validation, best):
-    """Keep the existing checkpoint on ties, regressions, or invalid losses."""
+    """Publish a complete improvement without risking the previous checkpoint."""
     loss = validation["weighted_loss"]
     if not math.isfinite(loss):
         raise ValueError("Validation loss is not finite; refusing checkpoint selection")
     if loss < best:
-        model.save_weights(destination / "best.weights.h5")
+        # Keras truncates its output before writing. Keep that write separate
+        # from the prior best and retain its required .weights.h5 suffix.
+        with tempfile.NamedTemporaryFile(dir=destination, prefix=".best-",
+                                         suffix=".weights.h5", delete=False) as temp:
+            pending = Path(temp.name)
+        try:
+            model.save_weights(pending)
+            pending.replace(destination / "best.weights.h5")
+        finally:
+            # Cleanup must not hide the save error or invalidate publication.
+            with suppress(OSError):
+                pending.unlink(missing_ok=True)
         return loss, True
     return best, False
 

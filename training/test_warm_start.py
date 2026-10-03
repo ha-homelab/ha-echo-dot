@@ -7,6 +7,7 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import DEFAULT_CONFIG, read_config, sha256
@@ -137,6 +138,37 @@ class WarmStartTests(unittest.TestCase):
         self.assertTrue(improved)
         self.assertEqual(best, .1)
         self.assertEqual(checkpoint.read_text(), "improved update")
+
+    def test_failed_save_preserves_prior_checkpoint_and_removes_partial_file(self):
+        for existing in (True, False):
+            with self.subTest(existing_checkpoint=existing):
+                if not existing:
+                    self.weights.unlink()
+                expected = self.weights.read_bytes() if existing else None
+                files_before = set(self.root.iterdir())
+
+                def partial_save(path):
+                    self.assertTrue(str(path).endswith(".weights.h5"))
+                    Path(path).write_bytes(b"partial HDF5 checkpoint")
+                    raise OSError("fixture: disk full during checkpoint save")
+
+                with self.assertRaisesRegex(OSError, "disk full"):
+                    checkpoint_if_better(SimpleNamespace(save_weights=partial_save),
+                                         self.root, {"weighted_loss": .1}, .2)
+                if existing:
+                    self.assertEqual(self.weights.read_bytes(), expected)
+                else:
+                    self.assertFalse(self.weights.exists())
+                self.assertEqual(set(self.root.iterdir()), files_before)
+
+    def test_failed_replace_keeps_prior_checkpoint_and_cleans_completed_temp_file(self):
+        expected = self.weights.read_bytes()
+        files_before = set(self.root.iterdir())
+        with patch.object(Path, "replace", side_effect=OSError("fixture: replace denied")):
+            with self.assertRaisesRegex(OSError, "replace denied"):
+                checkpoint_if_better(FakeModel([]), self.root, {"weighted_loss": .1}, .2)
+        self.assertEqual(self.weights.read_bytes(), expected)
+        self.assertEqual(set(self.root.iterdir()), files_before)
 
     def test_existing_candidate_is_immutable_without_importing_ml_packages(self):
         (self.root / "models/existing").mkdir(parents=True)
