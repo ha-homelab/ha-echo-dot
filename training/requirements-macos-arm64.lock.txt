@@ -24,7 +24,7 @@ markdown==3.11
 markdown-it-py==4.2.0
 markupsafe==3.0.3
 mdurl==0.1.2
-ml-dtypes==0.3.2
+ml-dtypes==0.4.1
 mmap-ninja==0.9.0
 namex==0.1.0
 numpy==1.26.4
@@ -44,13 +44,13 @@ scipy==1.17.1
 setuptools==84.0.0
 six==1.17.0
 soundfile==0.14.0
-tensorboard==2.16.2
+tensorboard==2.18.0
 tensorboard-data-server==0.7.2
-tensorflow==2.16.2
+tensorflow==2.18.1
 tensorflow-io-gcs-filesystem==0.37.1
 tensorflow-metal==1.2.0
 termcolor==3.3.0
-tf-keras==2.16.0
+tf-keras==2.18.0
 tqdm==4.70.1
 truststore==0.10.4
 typing-extensions==4.16.0
