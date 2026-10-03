@@ -1,10 +1,10 @@
-# Train and evaluate “Привет, Мышка” for EchoLocal
+# Train and evaluate Russian wake phrases for EchoLocal
 
 This is the executable version of the [Russian wake-word experiment](../docs/custom-wake-word.md). It covers preparation, synthesis, feature extraction, training, export, exact-runtime checks, calibration, a frozen test, optional personal recordings, packaging, and Home Assistant installation. Commands are deliberately separate: completing training does not start a final test or change a speaker.
 
-The reference target is **Echo Dot 2 / EchoLocal 0.0.8**, using its pinned Go microWakeWord runtime. This recipe trains **Привет, Мышка**. Changing the display phrase in JSON does not train another phrase; a different target requires changing and reviewing the synthesis recipe, pronunciation and negative examples in `data/recipe.py` as well.
+The reference target is **Echo Dot 2 / EchoLocal 0.0.8**, using its pinned Go microWakeWord runtime. The default recipe trains **Привет, Мышка**. The separate [Привет, котик recipe](configs/privet-kotik.json) selects its own `pk-v1` synthesis vocabulary through `synthesis_profile`; the pipeline forwards that profile to generation and data verification. Changing only the display phrase does not train another phrase. A different target requires a reviewed synthesis vocabulary, pronunciation and negative examples as well.
 
-**Current result:** the historical model is an experiment. It detected all 400 held-out synthetic positives, falsely activated on 2/250 difficult negative clips, and failed strict numerical parity on two traces. Independent activation by the owner's voice remains unconfirmed. Read the [training history](../docs/training-history.md) before interpreting these numbers or deploying the model.
+**Current result:** both models are experiments. The installed Myshka model detected 400/400 held-out synthetic positives and falsely activated on 2/250 difficult negatives. The new, undeployed Kotik candidate detected 398/400 and falsely activated on 2/250 at its frozen 0.90 cutoff. Both failed strict numerical parity; neither has passed ordinary-voice acceptance or a room-noise soak. Read the [training history](../docs/training-history.md) before interpreting these numbers or deploying a model.
 
 ## Where each component runs
 
@@ -34,6 +34,19 @@ python3 training/pipeline.py --work-dir "$WORK" doctor
 Use a new `WORK` for changed source data or feature preparation. Keep it under ignored `private/` or outside a public checkout. Do not point this workflow at historical experiment files. A candidate name and an evaluation run ID are immutable within their work directory. A model ID must be new when deploying changed model bytes, because devices can cache installed IDs.
 
 The recipe is [configs/privet-myshka.json](configs/privet-myshka.json). `setup` saves it to `WORK/recipe.json`. To use an edited recipe, copy it into a private file and pass `--config /absolute/path/recipe.json` **before the stage name** during setup. All later stages default to the saved recipe. Do not edit a recipe midway through a run.
+
+For **Привет, котик**, use a new work directory and the matching profile from the start:
+
+```bash
+WORK="$REPO/private/wakeword-runs/kotik-v1"
+CANDIDATE="candidate-1"
+MODEL_ID="privet_kotik_v1"
+RUN="candidate-1-evaluation"
+python3 training/pipeline.py --work-dir "$WORK" \
+  --config training/configs/privet-kotik.json setup --reference-lock
+```
+
+Continue the stages below with those variables. Regenerate phrase-specific speech and features: old Myshka positives are not Kotik positives. Cache reuse must record hashes and preserve source partitions. The historical Myshka results below do not measure the new phrase; Kotik needs its own calibration, held-out test and ordinary-voice acceptance.
 
 For any stage, inspect the planned command or its options first:
 
@@ -221,6 +234,10 @@ This is the first final-test inference stage. It cannot accept a new cutoff. It 
 
 This is the next data path when synthetic recognition does not transfer to the owner. Import **existing recordings**; the importer does not start any microphone. Use short, uncompressed **PCM16 mono 16 kHz WAVs** and pseudonymous speaker/session IDs. For bounded Echo capture and retention choices, see [DELIVERY.md](DELIVERY.md).
 
+Before collecting a series, verify one complete utterance and a usable start cue. EchoLocal 0.0.8 has a configurable per-slot wake tone; manual wake requests that tone, but an enabled setting does not prove the participant heard it. Red feedback can indicate timeout/failure, and the configured ring color/effect is not a universal recording indicator. Delayed chat messages are also unsuitable for precise synchronization. Agree on an audible or participant-controlled start, confirm it actually works, and retain a quiet margin after the final syllable. Never infer spoken content from the intended prompt, WAV duration, or a successful download. Keep unsuccessful attempts unlabelled until reviewed.
+
+A longer capture may contain silence, unrelated speech, or an incomplete phrase at an edge. Keep the original immutable. Derive any complete-phrase crop into a new private file, recording source checksum and start/end times; never crop off a word to fit the model context. A timeout without an STT transcript does not prove either that the person stayed silent or that the target phrase was recorded correctly.
+
 ```bash
 python3 training/pipeline.py --work-dir "$WORK" import-recording \
   --wav /absolute/path/train-phrase.wav --speaker speaker-a --session morning-01 \
@@ -236,6 +253,10 @@ python3 training/pipeline.py --work-dir "$WORK" train --candidate personalized-1
 Import all intended positives and negatives before `features-real`; those arrays are immutable. Include near-miss phrases, distances and ordinary room conditions. All clips from a session stay in one split. The same person may contribute different sessions to train and validation/test for personal adaptation; that measures a known speaker in another session. `--split-by speaker` enforces the stricter unseen-speaker design. Identical PCM cannot cross partitions even if its WAV header or filename changes.
 
 The training option mixes up to eight real positives and eight real negatives into each batch. It uses real validation arrays when present and never reads real test arrays. The input pipeline refuses a positive phrase that exceeds its approximately 2.5-second context; do not truncate one word to make it fit.
+
+To adapt an existing compatible checkpoint instead of starting from random weights, add both `--initial-weights /absolute/path/best.weights.h5` and `--initial-weights-sha256 THE_RECORDED_64_CHARACTER_SHA256` to the training command. The adjacent `recipe.json` must describe the same architecture; current and historical pilot formats are supported. Verify the source checksum before starting and use a smaller learning rate in a new private recipe. The optimizer is fresh; its old state is not resumed.
+
+Warm-start training evaluates and saves the initial checkpoint at step 0. Later weights replace it only when validation loss improves. `baseline-validation.json` and `training-complete.json` record the baseline and selected step. A selected step of 0 means fine-tuning did not improve the selection metric. This nonstreaming comparison still needs exact-Go streaming validation and a fresh human test before any device replacement.
 
 Repeat export, parity, calibration, freeze and test for the new candidate. Include real validation/test recordings in separate [evaluation manifests](validation/README.md#prepare-evaluation-audio-without-scoring-it): use `label: "positive"` or `"negative"`, the corresponding WAV path, `leading_ms: 3000` and `trailing_ms: 1000`. Preparing real features does not automatically add recordings to streaming evaluation. Retain the frozen old report. If you used old test failures during training decisions, collect a new final holdout; the scripts cannot detect human knowledge of a test outside their ledger.
 
@@ -269,17 +290,18 @@ Follow [model delivery and HA controls](../docs/custom-wake-word.md#5-make-the-v
 
 In **Settings → Devices & services → ESPHome → your Echo**, preserve **slot 1: Okay Nabu** and its tested assistant. Select the working Russian Assist pipeline for **Assistant 2**, set that slot's **Wake word sensitivity** to the evaluated cutoff, then select the new phrase as **Wake word 2**. EchoLocal 0.0.8 ignores the sidecar's cutoff for runtime control, so verify the actual HA value. Lower values permit more detections and false activations.
 
-First confirm model download and active slots, then independently say the custom wake phrase and a command. A correct STT transcript inside an Okay Nabu conversation does not prove custom wake detection. Record successes/misses at different distances, difficult negative activations, room-noise duration and reboot/reconnect behavior. Keep counts and untested conditions explicit. To roll back, disable only the second wake word and restore its previous settings; the first slot remains the working fallback.
+First confirm model download and active slots, then independently say the custom wake phrase and a command. A correct STT transcript inside an Okay Nabu conversation does not prove custom wake detection. Record successes/misses at different distances, difficult negative activations, room-noise duration and reboot/reconnect behavior. Keep counts and untested conditions explicit. To roll back, restore the saved second-slot model, assistant and threshold; disable that slot only if it was previously empty. A Myshka-to-Kotik upgrade must retain the current Myshka baseline for rollback. The first slot remains the working fallback.
 
 ## Reproducibility and publication
 
 This workflow makes inputs, stages, versions and failure states reproducible. It does not promise bit-identical model bytes across hardware, TensorFlow builds or changes to data preparation. The public feature stage also adds a complete-positive guard after reverb augmentation that was absent from the historical script; a new run is not asserted to reproduce the historical checksum.
 
-The refactor was checked with offline fixture tests, Go tests/vet, bounded feature extraction and a two-update training/export exercise. That verifies script integration, not the quality of a newly trained phrase. No new full training run or live HA/device change is part of preparing these scripts. Run the small source-based regression suites with:
+The original refactor was checked with offline fixture tests, Go tests/vet, bounded feature extraction and a two-update training/export exercise. Those checks verify script integration, not acoustic quality. A later complete Kotik training/evaluation run is recorded separately in the [stage history](../docs/training-history.md#new-target-привет-котик); its failed and unrun gates remain explicit. Run the small source-based regression suites with:
 
 ```bash
 python3 training/test_pipeline.py -v
 python3 training/test_delivery.py -v
+python3 training/test_warm_start.py -v
 "$WORK/.venv/bin/python" -m unittest discover -s training/data -p 'test_*.py' -v
 python3 -m unittest discover -s training/validation -p 'test_*.py' -v
 (cd training/validation && go test ./... && go vet ./...)

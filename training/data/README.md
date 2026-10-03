@@ -1,6 +1,6 @@
 # Portable training data stages
 
-These helpers reproduce the initial **«Привет, Мышка»** data recipe. They prepare data only: they do not train a detector, change Home Assistant, upload a model, or establish acoustic acceptance. The fixed vocabulary, source revisions, download sizes, hashes, and synthesis package versions are reviewable in `recipe.py`.
+These helpers reproduce the original **«Привет, Мышка»** profile (`pm-v1`, the unchanged default) and the separate **«Привет, котик»** profile (`pk-v1`). They prepare data only: they do not train a detector, change Home Assistant, upload a model, or establish acoustic acceptance. Each vocabulary, seed, source revision, download size, hash, and synthesis package version is reviewable in `recipe.py`.
 
 Run from the repository root using the Python environment prepared for training. Every command requires `--work-dir`; downloaded voices, archives, extraction files, manifests, partial arrays, checkpoints, and generated WAVs remain beneath that directory. Use a fresh private work directory outside the public source export. No datasets, voice weights, or generated audio are included in this source tree. Execution targets macOS/Linux; stage locks use `fcntl`. All four entry points support `--help` before optional numerical/audio packages are installed.
 
@@ -41,6 +41,24 @@ The manifest path is `WORK/data-generation/manifest-full.jsonl`. Each row has a 
 - Test: 400 positive and 250 negative sources.
 
 Every later window/augmentation must retain its source's partition. The splits share synthetic voices and vocabulary; they are not an unseen-real-speaker evaluation. `_SUCCESS.json` identifies the completed full manifest. `verify.py` is read-only and prints JSON: it checks the fixed source recipe, partitions, every WAV hash and header, duration, unique source/audio IDs, and nonzero audio. It does not silently repair files or approve a model.
+
+## Separate Kotik profile
+
+Use [privet-kotik.json](../configs/privet-kotik.json) for the model configuration and pass `--profile pk-v1` to synthesis and verification. The model ID is `privet_kotik_v1`; the positive phrase is **«Привет, котик»**, pronounced *pri-VET, KO-tik*. The second word has first-syllable stress. The profile uses ordinary Russian spelling, several punctuation/case variants, and records Piper's actual phonemes in every manifest row. Check those phonemes and audition the four-voice smoke preview; a recorded pronunciation target is not evidence of human-approved sound quality.
+
+```sh
+KOTIK_WORK=/absolute/path/to/private-kotik-run
+python training/data/generate.py --work-dir "$KOTIK_WORK" --profile pk-v1 --stage download
+python training/data/generate.py --work-dir "$KOTIK_WORK" --profile pk-v1 --stage smoke
+python training/data/verify.py --work-dir "$KOTIK_WORK" --profile pk-v1 --stage smoke
+# Review KOTIK_WORK/data-generation/preview-smoke.wav and its segment metadata.
+python training/data/generate.py --work-dir "$KOTIK_WORK" --profile pk-v1 --stage full
+python training/data/verify.py --work-dir "$KOTIK_WORK" --profile pk-v1 --stage full
+```
+
+For an existing verified voice cache copied beneath the new work directory, add `--offline` to `generate.py`; every pinned file is checked and a missing or changed file fails without downloading. The four voices and package pins are shared between profiles, but the generated recordings are separate. Source IDs start with `pk-v1-`, and seed **2026100204** controls the source split, per-source synthesis parameters and per-voice inference sequence. Counts remain 4,000 positive / 2,500 negative sources with the same 80/10/10 source allocation: train 3,200/2,000, validation 400/250, test 400/250. Omitting `--profile` always selects the original `pm-v1`; a different existing dataset profile is rejected.
+
+Kotik hard negatives include the previous **«Привет, мышка»** phrase, near neighbours (*кот*, *котики*, *котёнок*, *Костя*, *кофе*), either wake word alone, greetings, pet conversation and ordinary household/music commands. The old Myshka phrase must never be relabelled as a Kotik positive. Reusing source voices or existing background/LibriSpeech **negative train/validation** arrays is possible with a receipt recording exact paths, SHA-256 values, shapes, roles and splits. Do not import old TTS positives or old held-out tests into the new positive set. New human recordings require their own session-based train/validation/test separation; synthetic integrity does not establish human wake accuracy.
 
 ## Precomputed background features
 

@@ -5,7 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
-from common import DEFAULT_CONFIG, read_config, sha256, work_dir, write_json
+from common import DEFAULT_CONFIG, read_config, require_profile_identity, sha256, work_dir, write_json
 
 
 def frontend(audio, work, engine):
@@ -105,8 +105,9 @@ def main():
     parser.add_argument("--manifest")
     parser.add_argument("--workers", type=int, default=6)
     args = parser.parse_args()
-    read_config(args.config)
+    cfg = read_config(args.config)
     work = work_dir(args.work_dir)
+    require_profile_identity(work, cfg)
     if not 1 <= args.workers <= 32: parser.error("workers must be 1..32")
     source = work/("data-generation" if args.kind == "tts" else "recordings")
     manifest = Path(args.manifest) if args.manifest else source/("manifest-full.jsonl" if args.kind == "tts" else "manifest.jsonl")

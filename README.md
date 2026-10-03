@@ -16,6 +16,8 @@ This confirms one basic end-to-end voice test. Cold power cycling, a 20-command 
 
 A custom **Привет, Мышка** model is also installed in the second slot, with Okay Nabu retained in the first. Offline evaluation and deployment are complete, with two documented hard-negative errors. The initial user trial reported a problem; diagnosis is in progress and human spoken acceptance remains unconfirmed. See the [experiment and limitations](docs/custom-wake-word.md).
 
+A separate **Привет, котик** recipe and candidate have now been trained and evaluated. The candidate remains private and undeployed: it detected 398/400 held-out synthetic positives, produced two hard-negative events, and failed strict numerical parity. The first verified ordinary-voice recording was missed in an offline diagnostic; personal adaptation and spoken acceptance remain pending. See the [Kotik stage record](docs/training-history.md#new-target-привет-котик).
+
 ## Required components
 
 - **Hardware:** an Echo Dot 2, commonly labelled RS03QR, verified as BISCUIT over USB; a USB data cable; stable power; and a compatible Linux USB host. These images are not for other Echo generations.
@@ -52,6 +54,7 @@ Read these in order for the first device:
 
 Supporting material:
 
+- [Music startup latency](docs/music-latency.md): distinguish HA response time from Sendspin output delay and diagnose a disturbed clock estimate.
 - [Custom Russian wake phrase](docs/custom-wake-word.md): train and validate a second phrase while retaining Okay Nabu.
 - [Training commands, in order](training/README.md): environment, data, features, training, export, calibration, frozen test, recordings, packaging, and HA configuration.
 - [Training history and unresolved results](docs/training-history.md): decisions, measured results, failed checks, and the first human trial.
