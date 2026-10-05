@@ -82,8 +82,66 @@ The first accepted source was 3.5 seconds long. The participant confirmed the at
 
 Collection also exposed a delivery problem: short chat cues arrived after recording ended. Two attempts explicitly confirmed by the participant to contain no prompted phrase are excluded from positive training. A final chat response followed by a participant-held Action button successfully synchronized one attempt. The next one-minute arming window expired without audio, so the private helper now allows five minutes to start one attempt while keeping actual listening capped at 12 seconds. Failed or expired attempts do not become labelled examples.
 
+## Owner-controlled Mac collection and adaptation, 2026-10-03
+
+The participant completed 108 deliberate Mac microphone recordings using the local one-button recorder: 60 TRAIN, 24 VAL and 24 TEST. Each session recorded its entire **Мышка** batch before **Привет, Мышка**, then negatives. Sources remained private and session-separated. The participant reported correct prompted recording; labels preserve that attestation. Local unprompted ASR was supporting evidence for TRAIN/VAL, with disagreements retained, not automatic replacement labels. No independent per-clip human audition is claimed. TEST audio was first opened after the final diagnostic selection was written.
+
+The installed long-phrase model detected only **1/8** raw owner VAL positives at its current 0.35 cutoff. Several long-phrase adaptations improved recall but retained false activations or misses; none qualified for final acceptance. A separate short-word detector treats both standalone **Мышка** and its occurrence in **Привет, Мышка** as positive. This is one short-word detector, not two independently accepted wake phrases.
+
+The initial short model used 6,500 newly generated `m-v1` sources, existing verified background/LibriSpeech TRAIN/VAL features, and owner TRAIN/VAL examples. A second feature experiment retained complete owner waveforms and original level, used a three-second exact-Go frontend warmup, and added 12 deterministic TRAIN variants per source. VAL stayed unaugmented. This is now reproducible with `features-real --real-policy preserved-level-v1`. Several preparation factors changed together; the result does not isolate gain normalization as the sole cause. The selected owner checkpoint was update 600, with early stopping at 1,600. A later negative-weight experiment retained its initial checkpoint and was not treated as another improvement.
+
+At cutoff **0.935**, the selected short model detected **16/16 owner VAL positives** with zero events across eight owner negatives, 250 synthetic near misses and a 3,872.485-second concatenated LibriSpeech validation stream. The wider synthetic-positive calibration still failed its 98% recall target. A separate, explicitly narrower known-owner diagnostic retained that failure; it did not replace the broader report with a passing status. The acceptable owner VAL threshold margin was narrow. Strict same-feature numerical parity also failed: the two checked traces differed by up to **12** and **14** raw UINT8 score units, exceeding the fixed budget of one, although their clip decisions agreed.
+
+Model bytes and the **0.935** cutoff were frozen before the third session was evaluated once. On that held-out Mac session, the model detected **7/8 standalone Мышка** and **8/8 Привет, Мышка**, with **0/8 negative clips** activating. The missed standalone attempt had the low-register cue. The 15/16 total failed the diagnostic's required 100% recall. Negative source audio totaled only **13.744 seconds**, so the separate one-hour negative-duration gate also failed; an earlier validation speech stream does not satisfy that final-test gate or a room-noise soak. The threshold was not lowered after seeing the miss, and no subsequent training used the test results.
+
+An immutable private package was prepared as **experimental**, preserving failed parity, recall and duration gates and unrun live-Echo/room gates. It was **not staged or activated in Home Assistant**. Audio, derived features, weights, local paths and participant identifiers are excluded from the public source export. These results show an improvement on this owner's Mac recordings, not proven Echo microphone performance or unseen-speaker accuracy.
+
 ## Remaining work and next experiment
 
-Human spoken acceptance, a room-noise soak, and reliable custom activation remain unconfirmed. The current target is **Привет, котик**. The next steps are to collect more deliberately bounded ordinary-voice recordings, keep acquisition sessions separated, import accepted clips with [recordings.py](../training/recordings.py), and evaluate adaptation using real voice examples. Acoustic mismatch is a hypothesis to test, not an established diagnosis. Preserve consumed holdouts and use a fresh final selection for decisions informed by their errors; repeated diagnostic use must be labelled as reused.
+At the end of offline training, the focus was the short **Мышка** detector, which also responds inside **Привет, Мышка**. Physical deployment later produced the false-activation report and rollback recorded below. Numerical compatibility and a controlled room-noise soak remain unresolved. The separate long-only candidates have not passed owner validation. Preserve the consumed third session as evidence; any training decision informed by its miss needs a new independent test for an acceptance claim. Further diagnostic reuse must be explicitly labelled as reused.
 
 Keep the historical model and failed results. Use separate-session validation and a fresh independent final holdout for decisions influenced by the old test. Preserve Okay Nabu as the fallback while evaluating another revision. The Echo may already run from ordinary USB power; further wake-word training and network configuration do not require it to remain connected by USB data to Synology.
+
+## Experimental deployment to two Dot 2 units, 2026-10-04 UTC
+
+After the owner explicitly requested deployment to both converted units, the frozen `myshka_owner_raw_v1` package was verified and installed over the network. Its model SHA-256 is `88a7e4387cfd7100bbc48017fde56a727c673129fc4097c34102f0377960304d`. Only the model and matching manifest were staged for device download; participant recordings, features and evaluation reports were not placed in HA's HTTP-served directory.
+
+Each device was identified independently, and its current HA and native settings were saved before changes. One device exposed a discrepancy: HA's restored selectors said both words were off while its native active-ID list still contained Okay Nabu and the old long-phrase model. A selector state alone was therefore not sufficient evidence that local wake detection was disabled. The rollout explicitly reconciled both representations.
+
+The controlled native-API delivery route downloaded the new immutable model, verified its presence without an external offer, and reloaded only that device's ESPHome entry. Both devices then agreed on slot 1 **Okay Nabu**, slot 2 **Мышка**, and the existing Russian Assist pipeline. HA and native state both reported the frozen **0.935** second-slot threshold; native logs reported approximately `0.9350000023841858`, the expected float32 representation. No threshold rounding to 0.93 or 0.94 was used. Each device logged `wake word loaded` for the new model. The first-slot threshold remained 0.85, retention remained zero, and unrelated microphone, music and device settings matched the saved baselines. No global HA restart, device reflash, USB data connection or new microphone recording was required.
+
+This is a verified experimental deployment, not acoustic acceptance. The failed numerical-parity, owner-recall and final-negative-duration gates remain recorded. A live human wake-to-command-to-reply exchange, TV/room-noise false-trigger observations and cold-boot persistence still need separate checks. The old long model and per-device rollback settings remain available privately.
+
+## Rollback after false activations, 2026-10-04 UTC
+
+The owner reported that the short-word model was triggering frequently in a
+nearly quiet room and requested the previous detector. This is adverse field
+feedback, without a timed recording or a measured false-activation rate. The
+absence of activations on the small offline negative set did not predict this
+room behavior. The deployed short model is therefore withdrawn from active use;
+its artifacts and failed evaluation reports remain preserved as evidence.
+
+The initial per-device baseline had Okay Nabu plus `privet_myshka_v1` on the first
+Dot, and only Okay Nabu on the second. The owner then explicitly requested both
+Okay Nabu and the old long phrase on the second as well. Final state on **both**
+devices is slot 1 **Okay Nabu / 0.85**, slot 2 **Привет, Мышка / 0.35**. The old
+artifact SHA-256 is
+`20b28cd466a8c65aee5ac827b3e6a6d492b73645a510dffb2aacd81e1ae591eb`.
+The runtime 0.35 cutoff restores the former first-device operating point; it is
+distinct from the artifact manifest's default and is not a newly optimized value.
+
+Both devices confirmed the native active IDs `okay_nabu` and `privet_myshka_v1`,
+the actual second-slot threshold, and matching HA selections. The second device
+downloaded and cached the previous artifact; the first already had it. Initial
+connection/state timeouts on the first device delayed verification, but a later
+attempt completed successfully. The rejected short model is inactive on both.
+Current FCC assistant selections and unrelated settings were preserved; the
+rollback deliberately did not restore obsolete Sage assistant choices from the
+older snapshots. Recording retention remained zero, and no room recording,
+firmware reflash, global HA restart or synthetic speaker playback was started.
+
+This restores the requested prior behavior and adds it to the second Dot; it
+does not turn the older model into an accepted model. Its previously documented
+misses remain relevant. Any future short-word revision needs representative Echo
+quiet-room and background negatives, a new independent final test, and explicit
+field acceptance before being described as reliable.

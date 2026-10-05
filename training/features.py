@@ -97,14 +97,59 @@ def augment(job):
     return row["split"], int(row["label"]), np.clip(result, 0, 26).astype(np.float16), metadata
 
 
+def preserve_level(job):
+    """Keep complete short recordings and match the raw evaluator's warmup.
+
+    Variant zero retains the original waveform and level. Other TRAIN variants
+    change gain, room reflections and background noise. VAL/TEST stay unaltered;
+    their source recordings must still belong to independent acquisition sessions.
+    """
+    import numpy as np
+    import soundfile as sf
+    row, variant, work, source_root, kind = job
+    if kind != "real" or (row["split"] != "train" and variant != 0):
+        raise ValueError("Preserved-level features require real recordings and unaugmented holdouts")
+    audio, sr = sf.read(Path(source_root)/row["path"], dtype="float32")
+    if sr != 16000 or audio.ndim != 1 or not len(audio):
+        raise ValueError("Expected nonempty mono 16 kHz audio")
+    context = 252*160
+    if len(audio)+320 >= context:
+        raise ValueError("Complete recording plus tail must fit the context; no automatic speech cropping")
+    if row["label"] and not np.any(audio):
+        raise ValueError("Silent positive recording")
+    seed = int(hashlib.sha256(f"{row['source_id']}:raw:{variant}".encode()).hexdigest()[:8], 16)
+    rng = np.random.default_rng(seed)
+    gain = 1.0 if variant == 0 else float(2**rng.uniform(-1, 3))
+    tail = 320 if variant == 0 else int(rng.uniform(320, min(3200, context-len(audio))))
+    full = np.concatenate([np.zeros(48000, np.float32), audio*gain, np.zeros(tail, np.float32)])
+    if variant and variant % 3 == 0:
+        delay = int(rng.integers(320, min(1600, tail)+1))
+        full[delay:] += full[:-delay]*float(rng.uniform(.08, .22))
+    if variant and variant % 2 == 0:
+        full += rng.normal(0, float(rng.uniform(.00002, .00015))*gain, len(full)).astype(np.float32)
+    result = frontend(full, Path(work), "go")[-250:]
+    if result.shape != (250, 40):
+        raise ValueError("Unexpected frontend shape")
+    metadata = {"source_id": row["source_id"], "source_sha256": row["sha256"],
+                "split": row["split"], "label": row["label"], "variant": variant,
+                "seed": seed, "gain": gain, "tail_samples": tail, "leading_samples": 48000,
+                "full_source_retained": True, "frontend": "go", "kind": "real",
+                "policy": "preserved-level-v1", "unaugmented_holdout": row["split"] != "train"}
+    return row["split"], int(row["label"]), np.clip(result, 0, 26).astype(np.float16), metadata
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--work-dir", required=True)
     parser.add_argument("--config", default=str(DEFAULT_CONFIG))
     parser.add_argument("--kind", choices=["tts", "real"], default="tts")
+    parser.add_argument("--real-policy", choices=["legacy", "preserved-level-v1"], default="legacy",
+                        help="Optional complete-waveform owner adaptation; use a fresh feature directory")
     parser.add_argument("--manifest")
     parser.add_argument("--workers", type=int, default=6)
     args = parser.parse_args()
+    if args.kind != "real" and args.real_policy != "legacy":
+        parser.error("--real-policy applies only to --kind real")
     cfg = read_config(args.config)
     work = work_dir(args.work_dir)
     require_profile_identity(work, cfg)
@@ -119,11 +164,13 @@ def main():
     if provenance_path.exists() or any(p.exists() for p in names):
         raise ValueError("Feature outputs already exist; use a new work directory for changed data")
     import numpy as np
-    tasks = [(r, v, str(work), str(source), args.kind) for r in rows for v in range(3 if r["split"] == "train" else 1)]
+    preserved = args.real_policy == "preserved-level-v1"
+    variants = 12 if preserved else 3
+    tasks = [(r, v, str(work), str(source), args.kind) for r in rows for v in range(variants if r["split"] == "train" else 1)]
     groups = {(s,y): [] for s in ("train","val","test") for y in (0,1)}
     provenance = []
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.workers) as pool:
-        for count, (split,label,features,metadata) in enumerate(pool.map(augment, tasks, chunksize=16), 1):
+        for count, (split,label,features,metadata) in enumerate(pool.map(preserve_level if preserved else augment, tasks, chunksize=16), 1):
             groups[split,label].append(features); provenance.append(metadata)
             if count % 500 == 0: print(f"Features {count}/{len(tasks)}", flush=True)
     for (split,label), values in groups.items():
@@ -136,6 +183,7 @@ def main():
         "source_manifest_sha256": sha256(manifest), "frontend_sha256": sha256(work/"bin/gofeatures"),
         "arrays": [{"path": p.name, "sha256": sha256(p)} for p in names],
         "positive_window_policy": "No speech cropping after room augmentation",
+        "real_policy": args.real_policy if args.kind == "real" else None,
     }, exclusive=True)
     print("Saved",len(tasks),args.kind,"feature windows")
 

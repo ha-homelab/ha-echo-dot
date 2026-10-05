@@ -251,7 +251,19 @@ KOTIK_NEGATIVES = (
     'Компьютер не видит мышку.', 'Алекса.', 'Окей, Набу.', 'Алиса.', 'Маруся.', 'Стоп.',
 )
 
+# Short target: any complete spoken «мышка» is acoustically positive, including
+# within «Привет, Мышка». Do not reuse the long-phrase negatives unchanged.
+MYSHKA_POSITIVES = ('Мышка.', 'Мышка!', 'Мышка?', 'Мышка', 'Привет, мышка.', 'Где моя мышка?')
+MYSHKA_NEGATIVES = tuple(text for text in NEGATIVES
+                        if 'мышка' not in text.casefold()) + ('Мишенька.', 'Пышка.', 'Вспышка.', 'Крышка.')
+
 SYNTHESIS_PROFILES = {
+    'm-v1': {
+        'version': 'm-v1', 'model_id': 'myshka_v1', 'wake_word': 'Мышка',
+        'master_seed': 2026100301, 'voices': VOICES,
+        'positives': MYSHKA_POSITIVES, 'negatives': MYSHKA_NEGATIVES,
+        'pronunciation': 'Russian MYSH-ka: stress on the first syllable. Human audition required.',
+    },
     'pm-v1': {
         'version': 'pm-v1', 'model_id': 'privet_myshka_v1', 'wake_word': 'Привет, Мышка',
         'master_seed': MASTER_SEED, 'voices': VOICES,

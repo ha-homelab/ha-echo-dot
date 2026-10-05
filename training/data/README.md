@@ -1,6 +1,8 @@
 # Portable training data stages
 
-These helpers reproduce the original **«Привет, Мышка»** profile (`pm-v1`, the unchanged default) and the separate **«Привет, котик»** profile (`pk-v1`). They prepare data only: they do not train a detector, change Home Assistant, upload a model, or establish acoustic acceptance. Each vocabulary, seed, source revision, download size, hash, and synthesis package version is reviewable in `recipe.py`.
+These helpers reproduce the original **«Привет, Мышка»** profile (`pm-v1`, the unchanged default) and the separate **«Привет, котик»** profile (`pk-v1`). A third profile, `m-v1`, targets the standalone **«Мышка»**, including occurrences inside a longer utterance. Its negatives exclude the complete short word. This profile has been exercised in experimental owner training; it is not an accepted detector. See the [training history](../../docs/training-history.md).
+
+They prepare data only: they do not train a detector, change Home Assistant, upload a model, or establish acoustic acceptance. Each vocabulary, seed, source revision, download size, hash, and synthesis package version is reviewable in `recipe.py`.
 
 Run from the repository root using the Python environment prepared for training. Every command requires `--work-dir`; downloaded voices, archives, extraction files, manifests, partial arrays, checkpoints, and generated WAVs remain beneath that directory. Use a fresh private work directory outside the public source export. No datasets, voice weights, or generated audio are included in this source tree. Execution targets macOS/Linux; stage locks use `fcntl`. All four entry points support `--help` before optional numerical/audio packages are installed.
 

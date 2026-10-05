@@ -1,0 +1,19 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="recorder-token" content="__TOKEN__"><title>Myshka · Voice recorder</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head><body>
+<main>
+<header><div><p class="eyebrow">ECHO DOT / LOCAL RECORDING</p><h1>Teach Myshka to recognize your voice</h1><p class="intro">You start and stop every recording. Audio stays on this Mac.</p></div><span id="mic-state" class="badge">Microphone off</span></header>
+<nav aria-label="Recording sessions"><button data-split="train" class="tab selected">1. Training <small>60 phrases</small></button><button data-split="val" class="tab">2. Validation <small>24 phrases</small></button><button data-split="test" class="tab">3. Final test <small>24 phrases</small></button></nav>
+<div class="layout"><section class="studio" aria-label="Recording">
+<div class="progress-line"><span id="progress-text">Loading…</span><span id="timer">00.0</span></div><progress id="progress" max="60" value="0"></progress>
+<div id="session-intro" class="notice"><p id="session-note"></p></div>
+<p id="batch" class="eyebrow">BATCH 1 OF 3 · Мышка · 1 / 24</p><p id="kind" class="eyebrow">SAY IT ONCE</p><h2 id="phrase" lang="ru">Мышка</h2><p id="hint"></p><p class="timing">Click Record, wait for “SPEAK”, say the phrase, then click the same button to stop. The next prompt appears automatically.</p>
+<div class="meter" aria-label="Recording level"><div id="level"></div></div>
+<div class="controls"><button id="record" class="primary" disabled>Record</button></div>
+<p id="status" role="status" aria-live="polite">The microphone turns on only when you click Record.</p>
+<a id="download" hidden>Download unsaved WAV</a>
+<div id="finished" hidden class="notice"><h3>Session recorded</h3><p id="finish-status"></p><p>Take a break before the next session. Your recordings are saved on this Mac.</p></div>
+</section><aside>
+<label for="microphone">Microphone</label><select id="microphone"><option value="">Default Mac microphone</option></select><button id="devices" class="text-button">Refresh microphone list</button><p class="small">Your browser may request permission to show device names. This step records nothing and releases the microphone immediately.</p>
+<details><summary>Tips for useful recordings</summary><p>Start with your normal voice in a quiet room, about 40–60 cm from your Mac. Do not stretch the word or use an artificially high pitch.</p><p>Follow the cues: calmer, softer, or a little farther away. Record one phrase per take, usually 2–4 seconds. Recording stops automatically after 12 seconds.</p><p>Take a break and change position slightly before sessions two and three. Final test recordings stay separate from training.</p><p>The Mac and Echo have different microphones. After training, test the model with live speech on Echo. The short target <span lang="ru">“Мышка”</span> also occurs within <span lang="ru">“Привет, Мышка”</span>.</p></details>
+<div class="list-heading"><h3>Recordings in this session</h3><span id="saved-count"></span></div><div id="takes" class="takes"></div>
+</aside></div><footer><span id="storage"></span><p>Recording stops when you leave this tab. Audio stays out of the cloud and the public repository. Saving a phrase does not mean the model has been trained successfully.</p></footer>
+</main></body></html>
