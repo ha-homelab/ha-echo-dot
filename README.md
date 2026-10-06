@@ -77,3 +77,14 @@ python3 scripts/prepare_public_release.py /path/to/new/ha-echo-dot-public
 ```
 
 The destination must not exist. This copies only [allowlisted files](public-files.txt); it does not create a remote repository or publish anything. Review the output before sharing. No license for the original material has been selected; public visibility does not grant a separate reuse license. Keep the original workspace's private records, downloads, logs, and backups out of the repository.
+
+## Related projects
+
+- [Echo Show 5 Gen2 conversion](https://github.com/ha-homelab/ha-echo-show-5) is a
+  separate Android display/voice-client route. Its firmware and recovery steps
+  do not apply to the Echo Dot 2.
+- [Amazon Echo Home Energy](https://github.com/4alvit/amazon-echo-home-voice)
+  keeps the Alexa platform and adds a read-only energy skill. It does not convert
+  the Echo into an EchoLocal satellite.
+- [HA Homelab project directory](https://github.com/ha-homelab) lists the other
+  public integrations and hardware guides.
