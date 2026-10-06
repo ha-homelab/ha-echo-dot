@@ -166,7 +166,7 @@ grep -E '^ro.build.(id|version.(incremental|sdk|release))=' /tmp/verify-system-$
 done
 ```
 
-Read **both** files. The pilot reported `NS6574`, incremental `0013121734532`, SDK `25`, Android `7.1.2`; its display build also identified `7623N`. An empty file, failed mount or differing build does not pass. Recovery's own properties are not a substitute for checking the installed systems.
+Read **both** files. Require `NS6574`, incremental `0013121734532`, SDK `25`, and Android `7.1.2`. If checking the additional build fields, `ro.build.display.id` is `NS6574`; the `7623N` marker is in `ro.build.fingerprint`, not the display ID. An empty file, failed mount or differing build does not pass. Recovery's own properties are not a substitute for checking the installed systems.
 
 ## 6. Install EchoLocal and retain credentials privately
 
@@ -205,7 +205,7 @@ adbe shell getenforce
 adbe shell wpa_cli -p /data/misc/wifi/sockets -i wlan0 status > "$HAE_PRIVATE/wifi-status.txt"
 ```
 
-Expected: `1`, SDK `25`, `resident`, service `running`, and `Permissive`. Private Wi-Fi status must contain `wpa_state=COMPLETED`, the intended SSID and a valid IP. The supplicant socket can appear after `resident`; wait briefly and retry. The Synology wrapper checks this readiness separately. Record the IP privately for pairing.
+Expected: `1`, SDK `25`, `resident`, service `running`, and `Permissive`. Private Wi-Fi status must contain `wpa_state=COMPLETED`, the intended SSID and a valid IP. The supplicant socket can appear after `resident`, and Wi-Fi association can complete before DHCP supplies `ip_address`; wait briefly and retry until all conditions hold. The Synology wrapper checks this readiness separately. A readiness check that ran before DHCP completed does not by itself require reinstalling EchoLocal. Record the IP privately for pairing.
 
 The key lives at `/data/misc/echolocal/psk`. Both host adapters save `$HAE_PRIVATE/esphome.psk` as mode 0600 and validate that Base64 decoding yields 32 bytes. To recover it separately:
 

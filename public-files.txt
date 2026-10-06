@@ -10,6 +10,11 @@ docs/known-devices.md
 docs/usb-host.md
 docs/acceptance-and-batch.md
 docs/music-latency.md
+docs/echolocal-companion.md
+docs/device-access.md
+docs/device-controls.md
+docs/operations-findings.md
+docs/reference/echolocal-0.0.8-entities.json
 docs/publication.md
 docs/show5-plan.md
 research/conversion.md
@@ -66,3 +71,15 @@ training/validation/prepare_librispeech_eval.py
 training/validation/reference-sources.json
 training/validation/test_evaluate.py
 training/test_warm_start.py
+
+training/configs/myshka.json
+training/configs/privet-myshka-owner.json
+training/recorder/README.md
+training/recorder/review.py
+training/recorder/server.py
+training/recorder/test_browser.cjs
+training/recorder/test_recorder.py
+training/recorder/web/app.js
+training/recorder/web/capture.js
+training/recorder/web/index.html
+training/recorder/web/style.css

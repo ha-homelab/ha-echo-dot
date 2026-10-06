@@ -6,6 +6,44 @@ The reference pilot used **EchoLocal 0.0.8 and Home Assistant Core 2026.9.1**. T
 
 All angle-bracket values below are placeholders. Keep actual addresses, device identifiers, Wi-Fi details, encryption keys, and diagnostic recordings in private deployment records.
 
+### Current deployment: FCC primary, October 3, 2026 PDT
+
+After the operator reported exhausting the Homeway monthly allowance, the existing
+**FCC Russian Backup** assistant was promoted to HA's preferred pipeline. Both
+assistant slots on each of the two converted Dot 2 units, and the reachable VACA
+Show satellite, explicitly select that pipeline. Its existing name is retained
+even though it is now primary. An unavailable restored Show selector was excluded;
+select FCC on that device after reconnecting it. Changing the global preference
+does not override a satellite's explicit Homeway selection.
+
+This is a complete provider switch: **FCC Cloud Speech** supplies NVIDIA Parakeet
+STT and Russian Chatterbox TTS; **FCC Voice Backup** routes unmatched questions to
+`anthropic/open_router/liquid/lfm-2.5-2.6b:free`. HA local intents remain preferred
+for supported household commands. The selected path has no Homeway speech or
+conversation dependency. FCC's cloud providers still have their own account
+limits; this is not an offline or unlimited service.
+
+The live switch used the existing guarded
+[voice pipeline tool](https://github.com/ha-homelab/ha-echo-show-5/blob/main/scripts/voice_pipeline.py)
+with an explicit private mapping and `--include-default`. The five selector
+writes and one global preference write were journaled and read back. The global
+preference was also checked in persisted HA storage. Existing pipeline definitions,
+the Dot wake-word models and their thresholds were preserved. No HA restart,
+firmware installation or USB connection was required. Homeway remains registered
+for deliberate manual rollback, not automatic failover.
+
+Generated Russian audio completed FCC recognition, conversation and synthesis;
+the downloaded answer decoded successfully and answered the arithmetic question
+correctly. Recognition was imperfect: the first probe misheard the requested
+word, and the arithmetic probe misheard its first word while preserving
+"два плюс два". After switching, a separate text-to-conversation-to-TTS check
+returned "готово" with valid audio. These server checks do not establish physical
+microphone/speaker quality or reliable recognition in a room. No household
+microphone capture or speaker playback was started for these checks.
+
+For setup, UI switching and guarded rollback, see the
+[FCC deployment guide](https://github.com/ha-homelab/ha-echo-show-5/blob/main/docs/fcc-voice-backup.md).
+
 ## What is required
 
 - One running Home Assistant installation with Assist available.
@@ -14,6 +52,11 @@ All angle-bracket values below are placeholders. Keep actual addresses, device i
 - Network reachability from Home Assistant to the Echo and, for URL-based playback, from the Echo back to Home Assistant.
 
 The **ESPHome integration** is the primary connection. EchoLocal implements the ESPHome native API; the Echo is not an ESP32 that needs an ESPHome YAML build. Its standard voice, speaker, and device controls work without the optional EchoLocal HACS integration. [EchoLocal 0.0.8 overview](https://github.com/ygelfand/echolocal/blob/0.0.8/README.md).
+
+For the complete observed settings, numeric ranges, read-only data and action
+boundaries, use the [device-controls reference](../docs/device-controls.md).
+The [operational findings](../docs/operations-findings.md) record both-device
+verification and issues that remain unresolved.
 
 An `assist_satellite` entity is created through ESPHome. Do not try to add a separate integration named Assist Satellite: it is a building block supplied by device integrations. [Assist Satellite documentation](https://www.home-assistant.io/integrations/assist_satellite/).
 
@@ -115,11 +158,42 @@ Replace the target with the entity selected from the device page and adapt the m
 
 Listen for the message and verify that the satellite returns to idle. A successful action or an idle state alone does not prove audible output. If no sound is heard, check volume/mute, the selected TTS provider, and the URL playback path before adjusting wake-word sensitivity.
 
+### First-announcement format failure
+
+On a newly paired second unit, a text announcement returned to `idle` in under one second, but EchoLocal logged `playing the announcement failed` / `not a WAVE file`. The chime could play while the spoken message failed. This was an audio-format failure, not a volume or Wi-Fi failure.
+
+In the inspected HA 2026.9.1 ESPHome implementation, a device advertising the speaker feature gets its WAV TTS preferences when its first voice pipeline starts. A text announcement before that point can receive the provider's default format. Do not infer speaker failure or reinstall the Echo from this symptom. [ESPHome satellite implementation](https://github.com/home-assistant/core/blob/2026.9.1/homeassistant/components/esphome/assist_satellite.py).
+
+For a deterministic initial output test, generate TTS through `/api/tts_get_url` with the selected engine, language, message and these options: `preferred_format: wav`, `preferred_sample_rate: 16000`, `preferred_sample_channels: 1`, and `preferred_sample_bytes: 2`. Keep any returned URL private. Verify that the response is PCM WAV, then pass its reachable URL as `media_id` instead of `message`:
+
+```yaml
+action: assist_satellite.announce
+target:
+  entity_id: "<ECHO_ASSIST_SATELLITE_ENTITY>"
+data:
+  media_id: "<REACHABLE_PCM_WAV_URL>"
+```
+
+This explicit WAV path was verified on the second unit: the device decoded the speech, played it, and returned to idle without the format error. Listening confirmation and a complete microphone-to-reply exchange are separate checks. A streaming WAV may use an unspecified length in its header; measure the actual PCM bytes rather than trusting the declared frame count.
+
 ## 7. Test the complete voice exchange
 
 Say **Okay Nabu**, then a short command in the selected pipeline's language. Start with the explicitly named test lamp. Verify both the physical action and the spoken response; record them separately.
 
 For diagnosis, open **Settings → Voice assistants**, select the relevant assistant, choose **Debug**, and select the latest run. Separate failures by stage:
+
+A listening ring followed by a short red alert can mean an Assist pipeline
+failure rather than a wake-word or microphone-mute problem. In the October 4,
+2026 second-Dot incident, both HA and the Echo recorded `stt-stream-failed`;
+the matching FCC cloud-speech log reported `provider-unavailable`. No transcript
+or conversation stage was reached in that attempt. Later known synthetic audio
+passed the same live speech service and the complete FCC pipeline, including a
+downloaded, decodable answer. The participant subsequently confirmed that a
+button-activated exchange on the physical second Dot worked. This establishes
+recovery for that retry, not permanent provider availability or successful
+acoustic wake-word detection. Correlate the exact
+attempt with backend logs before changing microphones, wake models or firmware;
+the adapter's generic category alone does not identify a quota failure.
 
 - No activation: microphone mute, selected wake word, slot, or local detector.
 - Activation but no transcription: STT availability, selected language, or microphone/audio transport.
@@ -132,7 +206,7 @@ After the first successful exchange, separately test microphone mute, a software
 
 ## Optional integrations and alternative speech backends
 
-**EchoLocal HACS companion:** optional dashboard/card, activity views, and wake-word library management. The documented companion requires HA 2026.8 or newer. If needed later, add `ygelfand/echolocal-hacs` as an Integration custom repository in HACS, install it, restart HA, then use **Settings → Devices & services → Add integration → EchoLocal**. It supplements the ESPHome connection. It is not needed for the basic voice path and was not part of the acceptance evidence above. [Companion installation](https://github.com/ygelfand/echolocal-hacs#installing).
+**EchoLocal HACS companion:** optional dashboard/card, activity views, and wake-word library management. Version **v0.0.7** was installed through HACS on October 4, 2026. Both converted Dots now have custom cards on the existing **Overview → Media** view, plus the optional EchoLocal sidebar panel. Existing media cards, FCC assistant assignments, wake-word selections and recording-retention settings were preserved. See the [installation, card configuration and verification record](../docs/echolocal-companion.md). It supplements the ESPHome connection and is not required for basic voice operation. [Upstream installation](https://github.com/ygelfand/echolocal-hacs#installing).
 
 **ESPHome Device Builder:** not required for EchoLocal installation, pairing, or updates. Do not treat the Dot as a generic ESP32 firmware target. Use EchoLocal's own supported installation and update process.
 

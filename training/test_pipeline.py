@@ -230,5 +230,64 @@ class WorkflowContracts(unittest.TestCase):
                 with self.assertRaises(ValueError): check([a,bad])
 
 
+class PreservedLevelFeatures(unittest.TestCase):
+    def setUp(self):
+        try:
+            import numpy as np
+            import soundfile as sf
+        except ImportError:
+            self.skipTest("Optional numerical/audio packages are not installed")
+        self.np, self.sf = np, sf
+
+    def test_unaugmented_holdout_retains_every_sample_and_original_level(self):
+        from features import preserve_level
+        np = self.np
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            # Include quiet speech-like samples and silence at both ends: a
+            # peak-normalizing or silence-trimming path must fail this check.
+            audio = np.zeros(32000, np.float32)
+            audio[700:27000] = np.sin(np.arange(26300)*.03)*.015
+            self.sf.write(root/'clip.wav', audio, 16000, subtype='PCM_16')
+            original = self.sf.read(root/'clip.wav', dtype='float32')[0]
+            row = dict(source_id='fixture', sha256='fixture-hash', path='clip.wav', split='val', label=1)
+            observed = []
+            def frontend(samples, work, engine):
+                observed.append(samples.copy())
+                self.assertEqual(engine, 'go')
+                return np.zeros((450, 40), np.float32)
+            with patch('features.frontend', side_effect=frontend):
+                split, label, array, receipt = preserve_level((row, 0, root, root, 'real'))
+            self.assertEqual((split, label, array.shape), ('val', 1, (250, 40)))
+            np.testing.assert_array_equal(observed[0][:48000], 0)
+            np.testing.assert_array_equal(observed[0][48000:80000], original)
+            np.testing.assert_array_equal(observed[0][80000:], np.zeros(320))
+            self.assertTrue(receipt['full_source_retained'])
+            self.assertTrue(receipt['unaugmented_holdout'])
+            with self.assertRaisesRegex(ValueError, 'unaugmented holdouts'):
+                preserve_level((row, 1, root, root, 'real'))
+            self.sf.write(root/'clip.wav', np.ones(40000)*.01, 16000, subtype='PCM_16')
+            with self.assertRaisesRegex(ValueError, 'no automatic speech cropping'):
+                preserve_level((row, 0, root, root, 'real'))
+
+    def test_train_augmentation_is_repeatable_and_keeps_source_partition(self):
+        from features import preserve_level
+        np = self.np
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.sf.write(root/'clip.wav', np.sin(np.arange(24000)*.04)*.02, 16000, subtype='PCM_16')
+            row = dict(source_id='fixture', sha256='fixture-hash', path='clip.wav', split='train', label=0)
+            observed = []
+            def frontend(samples, work, engine):
+                observed.append(samples.copy())
+                return np.zeros((450, 40), np.float32)
+            with patch('features.frontend', side_effect=frontend):
+                first = preserve_level((row, 6, root, root, 'real'))
+                second = preserve_level((row, 6, root, root, 'real'))
+            np.testing.assert_array_equal(*observed)
+            self.assertEqual(first[3], second[3])
+            self.assertEqual((first[0], first[1], first[3]['source_id']), ('train', 0, 'fixture'))
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -54,6 +54,10 @@ Read these in order for the first device:
 
 Supporting material:
 
+- [Device controls and limits](docs/device-controls.md): what can be read, changed or triggered, numeric ranges, options and fixed limits.
+- [Operational findings](docs/operations-findings.md): dated checks on both Dots, resolved steps, remaining failures and evidence boundaries.
+- [EchoLocal companion and dashboard](docs/echolocal-companion.md): HACS installation, cards on an existing media view, activity and diagnostics.
+- [Device access and ADB diagnostics](docs/device-access.md): USB/Wi-Fi shell access, verified capabilities and maintenance boundaries.
 - [Music startup latency](docs/music-latency.md): distinguish HA response time from Sendspin output delay and diagnose a disturbed clock estimate.
 - [Custom Russian wake phrase](docs/custom-wake-word.md): train and validate a second phrase while retaining Okay Nabu.
 - [Training commands, in order](training/README.md): environment, data, features, training, export, calibration, frozen test, recordings, packaging, and HA configuration.

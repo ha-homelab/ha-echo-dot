@@ -2,9 +2,11 @@
 
 This is the executable version of the [Russian wake-word experiment](../docs/custom-wake-word.md). It covers preparation, synthesis, feature extraction, training, export, exact-runtime checks, calibration, a frozen test, optional personal recordings, packaging, and Home Assistant installation. Commands are deliberately separate: completing training does not start a final test or change a speaker.
 
+For user-controlled microphone collection on macOS, use the [local recording studio](recorder/README.md). It collects separate TRAIN/VAL/TEST sessions for **Мышка** and **Привет, Мышка**, saves private WAVs, and requires transcript review before importing either target.
+
 The reference target is **Echo Dot 2 / EchoLocal 0.0.8**, using its pinned Go microWakeWord runtime. The default recipe trains **Привет, Мышка**. The separate [Привет, котик recipe](configs/privet-kotik.json) selects its own `pk-v1` synthesis vocabulary through `synthesis_profile`; the pipeline forwards that profile to generation and data verification. Changing only the display phrase does not train another phrase. A different target requires a reviewed synthesis vocabulary, pronunciation and negative examples as well.
 
-**Current result:** both models are experiments. The installed Myshka model detected 400/400 held-out synthetic positives and falsely activated on 2/250 difficult negatives. The new, undeployed Kotik candidate detected 398/400 and falsely activated on 2/250 at its frozen 0.90 cutoff. Both failed strict numerical parity; neither has passed ordinary-voice acceptance or a room-noise soak. Read the [training history](../docs/training-history.md) before interpreting these numbers or deploying a model.
+**Current result:** all custom models remain experimental. The owner-adapted short-word detector recognized 15/16 held-out Mac utterances at a frozen 0.935 cutoff, but failed strict numerical parity and the required 100% recall. After deployment, the owner reported frequent false activations in a nearly quiet room and requested rollback. The short model is now inactive on both Dot 2 units. Each uses **Okay Nabu / 0.85** and the previous **Привет, Мышка / 0.35** model, with **FCC Russian Backup** preserved. The old long model was restored on the first device and explicitly requested for the second. Verified installation does not erase the older model's known misses or establish acoustic acceptance. Read the [training history](../docs/training-history.md) for the failed gates, field report and rollback evidence.
 
 ## Where each component runs
 
@@ -253,6 +255,15 @@ python3 training/pipeline.py --work-dir "$WORK" train --candidate personalized-1
 Import all intended positives and negatives before `features-real`; those arrays are immutable. Include near-miss phrases, distances and ordinary room conditions. All clips from a session stay in one split. The same person may contribute different sessions to train and validation/test for personal adaptation; that measures a known speaker in another session. `--split-by speaker` enforces the stricter unseen-speaker design. Identical PCM cannot cross partitions even if its WAV header or filename changes.
 
 The training option mixes up to eight real positives and eight real negatives into each batch. It uses real validation arrays when present and never reads real test arrays. The input pipeline refuses a positive phrase that exceeds its approximately 2.5-second context; do not truncate one word to make it fit.
+
+For short Mac recordings, an optional feature policy retains the original level and complete waveform instead of peak-normalizing and trimming it. Use a fresh work directory with **TRAIN/VAL only** imported:
+
+```bash
+python3 training/pipeline.py --work-dir "$WORK" features-real \
+  --real-policy preserved-level-v1 --workers 4
+```
+
+This policy extracts the exact Go frontend after three seconds of leading digital silence, then retains 250 frames. Each TRAIN source contributes 12 deterministic variants: variant zero preserves its level; the others vary gain, tail, reflections and noise. VAL remains unaugmented. The complete source plus at least 20 ms of tail must fit the context; longer recordings are rejected, never automatically cut. All variants retain their source partition and do not increase the number of independent recordings. The historical policy remains the default. Record the chosen policy in feature receipts and compare **raw streaming VAL audio**, since a low nonstreaming feature loss can still conceal misses or false activations. Do not import or extract final TEST audio until the selected model and threshold are frozen.
 
 To adapt an existing compatible checkpoint instead of starting from random weights, add both `--initial-weights /absolute/path/best.weights.h5` and `--initial-weights-sha256 THE_RECORDED_64_CHARACTER_SHA256` to the training command. The adjacent `recipe.json` must describe the same architecture; current and historical pilot formats are supported. Verify the source checksum before starting and use a smaller learning rate in a new private recipe. The optimizer is fresh; its old state is not resumed.
 

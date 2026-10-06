@@ -53,17 +53,22 @@ assert len(base64.b64decode(key, validate=True)) == 32, 'Unexpected ESPHome key 
 print('Unique ESPHome key validated and saved privately', flush=True)
 # The service can be resident a few seconds before the supplicant socket is ready.
 status = {}
+address = None
 for attempt in range(30):
     probe = subprocess.run(adb + ['shell', 'wpa_cli', '-p', '/data/misc/wifi/sockets',
                                   '-i', 'wlan0', 'status'],
                            timeout=20, capture_output=True, text=True)
     status = dict(line.split('=', 1) for line in probe.stdout.splitlines() if '=' in line)
-    if probe.returncode == 0 and status.get('wpa_state') == 'COMPLETED':
+    try:
+        address = str(ipaddress.ip_address(status.get('ip_address', '')))
+    except ValueError:
+        address = None
+    if probe.returncode == 0 and status.get('wpa_state') == 'COMPLETED' and address:
         break
     time.sleep(2)
 assert status.get('wpa_state') == 'COMPLETED', 'Wi-Fi association incomplete'
 assert status.get('ssid') == wifi['ssid'], 'Unexpected Wi-Fi network'
-address = str(ipaddress.ip_address(status['ip_address']))
+assert address is not None, 'Wi-Fi associated but no valid IP address was assigned'
 sdk = subprocess.check_output(adb + ['shell', 'getprop', 'ro.build.version.sdk'], timeout=20).decode().strip()
 service = subprocess.check_output(adb + ['shell', 'getprop', 'echolocal.state'], timeout=20).decode().strip()
 assert sdk == '25' and service == 'resident', 'Unexpected SDK or EchoLocal service state'
