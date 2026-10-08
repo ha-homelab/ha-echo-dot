@@ -91,3 +91,5 @@ training/recorder/web/app.js
 training/recorder/web/capture.js
 training/recorder/web/index.html
 training/recorder/web/style.css
+requirements-host-tests.in
+requirements-host-tests.txt
