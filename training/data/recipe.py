@@ -211,7 +211,7 @@ LIBRISPEECH_PINS = [{'subset': 'dev-clean',
 
 SYNTHESIS_PACKAGES = {'numpy': '1.26.4',
  'onnxruntime': '1.30.0',
- 'piper-tts': '1.3.0',
+ 'piper-tts': '1.8.0',
  'scipy': '1.17.1'}
 
 # A different wake phrase is a new source population, never a relabelled pm-v1

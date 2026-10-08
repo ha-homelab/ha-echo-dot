@@ -14,6 +14,28 @@ updates:
     directory: /training
     schedule:
       interval: daily
+    # The reference builder is validated with Python 3.11, NumPy 1.26 and TF 2.18.
+    # Raise these bounds only with a complete lock + builder/export parity check.
+    # Compatible patches remain eligible; security migrations require the same check.
+    ignore:
+      - dependency-name: tensorflow
+        versions: [">=2.19"]
+      - dependency-name: tf-keras
+        versions: [">=2.19"]
+      - dependency-name: scipy
+        versions: [">=1.18"]
+    groups:
+      tensorflow-runtime:
+        patterns:
+          - tensorflow
+          - tensorflow-metal
+          - tf-keras
+          - tensorboard
+          - ml-dtypes
+          - protobuf
+          - numpy
+          - h5py
+          - keras
 
   - package-ecosystem: gomod
     directory: /training/validation

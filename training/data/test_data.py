@@ -127,6 +127,16 @@ class FileTests(unittest.TestCase):
 
 
 class RecipeTests(unittest.TestCase):
+    def test_synthesis_versions_match_both_installation_paths(self):
+        root = Path(__file__).parents[1]
+        for filename in ("requirements.txt", "requirements-macos-arm64.lock.txt"):
+            pins = dict(line.strip().split("==", 1) for line in
+                        (root / filename).read_text().splitlines()
+                        if line.strip() and not line.startswith("#"))
+            with self.subTest(requirements=filename):
+                for package, version in recipe.SYNTHESIS_PACKAGES.items():
+                    self.assertEqual(pins[package], version, package)
+
     def test_original_myshka_jobs_are_byte_for_byte_unchanged(self):
         encoded = json.dumps(generate.make_jobs(), sort_keys=True, ensure_ascii=False).encode()
         self.assertEqual(hashlib.sha256(encoded).hexdigest(),

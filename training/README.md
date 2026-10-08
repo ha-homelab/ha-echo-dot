@@ -87,6 +87,14 @@ and the pinned builder's synthetic INT8/UINT8 export with exact-Go inference.
 The regression test fails with protobuf 4.25.9 and passes with 5.29.6. No model
 training, acoustic acceptance or device rollout is claimed by these checks.
 
+Dependabot keeps TensorFlow and tf-keras on the validated 2.18 line, and SciPy
+below 1.18 because the recipe requires Python 3.11 and NumPy 1.26.4. Related
+TensorFlow packages update together. A new runtime line needs a complete lock,
+package compatibility, security and builder/export parity checks before these
+bounds change. Compatible patches remain eligible. Piper 1.8.0 is recorded in
+both installation paths and the synthesis recipe; changed synthesis dependencies
+require a new work directory, and do not validate historical acoustic results.
+
 The builder is `kahrendt/microWakeWord` at `a70bd740d4e79ee8a8bb3db843fe862b88d5d6b0`. The Go validator imports `zserge/microwakeword` at `bfaf3840114ece54665c15e6e202ddb1463c3d37`, the revision used by EchoLocal 0.0.8. `build` creates `WORK/bin/validate`, `WORK/bin/gofeatures` and a source/binary hash receipt. It refuses to silently replace a changed validator in a recorded run.
 
 **Complete when:** `environment.json`, `environment-resolved.txt`, `recipe.json` and `bin/build.json` exist, and both commands return zero. The exact runtime and frontend constraints are in [validation/COMPATIBILITY.md](validation/COMPATIBILITY.md).
