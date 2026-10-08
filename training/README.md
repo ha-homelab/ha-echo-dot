@@ -88,12 +88,21 @@ The regression test fails with protobuf 4.25.9 and passes with 5.29.6. No model
 training, acoustic acceptance or device rollout is claimed by these checks.
 
 Dependabot keeps TensorFlow and tf-keras on the validated 2.18 line, and SciPy
-below 1.18 because the recipe requires Python 3.11 and NumPy 1.26.4. Related
-TensorFlow packages update together. A new runtime line needs a complete lock,
+below 1.18 because the recipe requires Python 3.11 and NumPy 1.26.4. NumPy stays
+below 2 and ml-dtypes below 0.6, whose package metadata requires NumPy 2.
+TensorFlow 2.18 also requires protobuf below 6 and TensorBoard below 2.19.
+Related TensorFlow packages update together. A new runtime line needs a complete lock,
 package compatibility, security and builder/export parity checks before these
 bounds change. Compatible patches remain eligible. Piper 1.8.0 is recorded in
 both installation paths and the synthesis recipe; changed synthesis dependencies
 require a new work directory, and do not validate historical acoustic results.
+
+Host CI runs `python training/check_reference_lock.py` using uv 0.12.7. This
+resolves every direct and locked dependency for Python 3.11 / macOS 14 ARM64,
+rejects incompatible versions and missing transitive pins, and never installs
+native packages. macOS 14 is explicit because the recorded ONNX Runtime wheel
+requires it. This metadata check also runs on Linux; native imports and the
+builder/export checks above are still required for a changed runtime.
 
 The builder is `kahrendt/microWakeWord` at `a70bd740d4e79ee8a8bb3db843fe862b88d5d6b0`. The Go validator imports `zserge/microwakeword` at `bfaf3840114ece54665c15e6e202ddb1463c3d37`, the revision used by EchoLocal 0.0.8. `build` creates `WORK/bin/validate`, `WORK/bin/gofeatures` and a source/binary hash receipt. It refuses to silently replace a changed validator in a recorded run.
 

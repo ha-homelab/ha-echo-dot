@@ -22,6 +22,16 @@ updates:
         versions: [">=2.19"]
       - dependency-name: tf-keras
         versions: [">=2.19"]
+      - dependency-name: numpy
+        versions: [">=2"]
+      # ml-dtypes 0.6 requires NumPy 2; keep the recorded NumPy 1.x recipe.
+      - dependency-name: ml-dtypes
+        versions: [">=0.6"]
+      # TensorFlow 2.18 requires protobuf <6 and TensorBoard <2.19.
+      - dependency-name: protobuf
+        versions: [">=6"]
+      - dependency-name: tensorboard
+        versions: [">=2.19"]
       - dependency-name: scipy
         versions: [">=1.18"]
     groups:
