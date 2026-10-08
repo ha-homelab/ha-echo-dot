@@ -24,7 +24,7 @@ markdown==3.11
 markdown-it-py==4.2.0
 markupsafe==3.0.4
 mdurl==0.1.2
-ml-dtypes==0.4.1
+ml-dtypes==0.5.4
 mmap-ninja==0.9.0
 namex==0.1.0
 numpy==1.26.4
