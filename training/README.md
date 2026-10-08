@@ -97,7 +97,7 @@ bounds change. Compatible patches remain eligible. Piper 1.8.0 is recorded in
 both installation paths and the synthesis recipe; changed synthesis dependencies
 require a new work directory, and do not validate historical acoustic results.
 
-Host CI runs `python training/check_reference_lock.py` using uv 0.12.7. This
+Host CI runs `python training/check_reference_lock.py` using uv 0.12.18. This
 resolves every direct and locked dependency for Python 3.11 / macOS 14 ARM64,
 rejects incompatible versions and missing transitive pins, and never installs
 native packages. macOS 14 is explicit because the recorded ONNX Runtime wheel
