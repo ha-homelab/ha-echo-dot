@@ -92,3 +92,9 @@ The destination must not exist. This copies only [allowlisted files](public-file
   the Echo into an EchoLocal satellite.
 - [HA Homelab project directory](https://github.com/ha-homelab) lists the other
   public integrations and hardware guides.
+
+## Project maintenance
+
+See [contribution and test requirements](CONTRIBUTING.md), the
+[security reporting policy](SECURITY.md), [security design](docs/security-design.md),
+and the [OpenSSF evidence and remaining criteria](docs/openssf-evidence.md).
