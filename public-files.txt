@@ -1,6 +1,13 @@
 # Only these documentation, source, recipe, dependency and test files belong in the public export.
 .gitignore
 README.md
+CONTRIBUTING.md
+CHANGELOG.md
+SECURITY.md
+.bestpractices.json
+docs/security-design.md
+docs/openssf-evidence.md
+.github/workflows/tests.yml
 THIRD_PARTY_NOTICES.md
 public-files.txt
 docs/runbook.md
