@@ -227,6 +227,44 @@ streamed speech, not a universal music-startup control. Existing analysis is in
 [music latency](music-latency.md); neither installing the companion nor obtaining
 root fixes audio glitches by itself.
 
+## Cloud speech connection recovery — 2026-10-06
+
+The recorded incident affected the shared FCC speech adapter used by both Dots.
+Its existing process returned four 30-second timeouts (three recognition probes
+and one synthesis probe). A fresh client in the same Pod, using the same cloud
+functions and credential, completed recognition in 2.566 seconds and synthesis
+in 2.369 seconds. The original process still timed out immediately afterward.
+This supports a stale connection/session diagnosis; the initial trigger was
+not established.
+
+The [0.1.1 adapter implementation](https://github.com/ha-homelab/ha-echo-show-5/blob/3c7b273b85bb8629276d556b602c96d889f44c31/integrations/fcc-voice-backup/cloud_speech.py)
+opens a dedicated TLS gRPC connection for each recognition request or complete
+synthesis operation and closes it on success, failure or cancellation. It no
+longer shares one process-lifetime connection across recognition and synthesis.
+The recorded rollout verified the runtime source hash against the tested code.
+Dot firmware, wake models, sensitivity, assistant selections and recording
+retention were unchanged by that rollout.
+
+Afterward, direct recognition probes took 1.874 and 1.527 seconds, and a complete
+synthesis probe took 2.969 seconds. Synthetic HA runs using each Dot's device
+context returned decodable, non-error answer audio. Their complete answers
+became available 16.624 and 16.191 seconds after input ended, so long-answer
+synthesis latency remained substantial. A recognition probe after a 35-second
+idle gap also passed. The recorded checks included 41 bridge/audio tests and
+five recovery-manifest tests.
+
+A separate short text-to-speech/local-intent check, without recognition input,
+returned fresh audio in 2.513 seconds. Repeating the same question in the other
+device context returned the identical cached audio in 0.097 seconds; that cache
+hit is not a cloud synthesis measurement.
+
+These are historical observations, not a current service-health check. The
+same incident window also contained no-speech results and conversation
+provider timeouts; the connection fix does not establish that those causes
+were resolved. Live probes used synthetic input and fetched audio without
+speaker playback. No attended microphone/speaker acceptance test was completed;
+private diagnostics and audio are not included here.
+
 ## Public evidence boundary
 
 Public documentation contains versioned facts, generic paths, advertised
