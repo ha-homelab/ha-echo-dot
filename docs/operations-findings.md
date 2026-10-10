@@ -237,7 +237,7 @@ in 2.369 seconds. The original process still timed out immediately afterward.
 This supports a stale connection/session diagnosis; the initial trigger was
 not established.
 
-The [0.1.1 adapter implementation](https://github.com/ha-homelab/ha-echo-show-5/blob/3c7b273b85bb8629276d556b602c96d889f44c31/integrations/fcc-voice-backup/cloud_speech.py)
+The [0.1.1 adapter implementation](https://github.com/ha-homelab/ha-echo-show-5/blob/114331a9ab17d484f8b738846ed8190eb69ec4f1/integrations/fcc-voice-backup/cloud_speech.py)
 opens a dedicated TLS gRPC connection for each recognition request or complete
 synthesis operation and closes it on success, failure or cancellation. It no
 longer shares one process-lifetime connection across recognition and synthesis.
