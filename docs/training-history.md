@@ -86,7 +86,7 @@ Collection also exposed a delivery problem: short chat cues arrived after record
 
 The participant completed 108 deliberate Mac microphone recordings using the local one-button recorder: 60 TRAIN, 24 VAL and 24 TEST. Each session recorded its entire **Мышка** batch before **Привет, Мышка**, then negatives. Sources remained private and session-separated. The participant reported correct prompted recording; labels preserve that attestation. Local unprompted ASR was supporting evidence for TRAIN/VAL, with disagreements retained, not automatic replacement labels. No independent per-clip human audition is claimed. TEST audio was first opened after the final diagnostic selection was written.
 
-The installed long-phrase model detected only **1/8** raw owner VAL positives at its current 0.35 cutoff. Several long-phrase adaptations improved recall but retained false activations or misses; none qualified for final acceptance. A separate short-word detector treats both standalone **Мышка** and its occurrence in **Привет, Мышка** as positive. This is one short-word detector, not two independently accepted wake phrases.
+The installed long-phrase model detected only **1/8** raw owner VAL positives at its then-current 0.35 cutoff. Several long-phrase adaptations improved recall but retained false activations or misses; none qualified for final acceptance. A separate short-word detector treats both standalone **Мышка** and its occurrence in **Привет, Мышка** as positive. This is one short-word detector, not two independently accepted wake phrases.
 
 The initial short model used 6,500 newly generated `m-v1` sources, existing verified background/LibriSpeech TRAIN/VAL features, and owner TRAIN/VAL examples. A second feature experiment retained complete owner waveforms and original level, used a three-second exact-Go frontend warmup, and added 12 deterministic TRAIN variants per source. VAL stayed unaugmented. This is now reproducible with `features-real --real-policy preserved-level-v1`. Several preparation factors changed together; the result does not isolate gain normalization as the sole cause. The selected owner checkpoint was update 600, with early stopping at 1,600. A later negative-weight experiment retained its initial checkpoint and was not treated as another improvement.
 
@@ -124,7 +124,8 @@ its artifacts and failed evaluation reports remain preserved as evidence.
 The initial per-device baseline had Okay Nabu plus `privet_myshka_v1` on the first
 Dot, and only Okay Nabu on the second. The owner then explicitly requested both
 Okay Nabu and the old long phrase on the second as well. Final state on **both**
-devices is slot 1 **Okay Nabu / 0.85**, slot 2 **Привет, Мышка / 0.35**. The old
+devices at that checkpoint was slot 1 **Okay Nabu / 0.85**, slot 2
+**Привет, Мышка / 0.35**. The old
 artifact SHA-256 is
 `20b28cd466a8c65aee5ac827b3e6a6d492b73645a510dffb2aacd81e1ae591eb`.
 The runtime 0.35 cutoff restores the former first-device operating point; it is
@@ -145,3 +146,13 @@ does not turn the older model into an accepted model. Its previously documented
 misses remain relevant. Any future short-word revision needs representative Echo
 quiet-room and background negatives, a new independent final test, and explicit
 field acceptance before being described as reliable.
+
+## Later operating thresholds, 2026-10-08 Pacific / 2026-10-09 UTC
+
+After another report of unwanted activations, native logs confirmed detections
+at the historical low cutoffs. At this checkpoint, both Dots used
+**Okay Nabu / 0.95** and **Привет, Мышка / 0.90**, with the same model bytes. This is an operational
+mitigation; no new training or acoustic acceptance test was completed. All
+frozen evaluation results above remain unchanged. See the
+[incident record](operations-findings.md#unwanted-wake-activations--2026-10-08-pacific--2026-10-09-utc)
+for evidence, verification and the remaining recognition tradeoff.

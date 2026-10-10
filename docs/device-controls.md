@@ -125,20 +125,27 @@ stop a current activity. Holding it reaches slot 2; the source's hold threshold
 is **700 ms**. A button-started turn can report the slot's configured wake phrase
 even though no phrase was detected acoustically.
 
-### Existing threshold exception
+### Last observed thresholds and historical exception
 
-The observed baseline is **Okay Nabu at 0.85** and **Привет, Мышка at 0.35**, both
+At the **October 8 Pacific / October 9 UTC, 2026** observation, both Dots used
+**Okay Nabu at 0.95** and **Привет, Мышка at 0.90**. Native state and the persisted device
+configuration confirmed all four values. The change reduced sensitivity following
+unwanted activations; it does not establish recognition of normal human speech.
+See the [incident record](operations-findings.md#unwanted-wake-activations--2026-10-08-pacific--2026-10-09-utc).
+
+The October 4 baseline was **Okay Nabu at 0.85** and **Привет, Мышка at 0.35**, both
 using **FCC Russian Backup**. The second value is **outside the advertised HA
 range**. It was already present before the companion installation, and was not
-changed during this documentation audit. The source's stored threshold writer
+changed during that installation audit. The source's stored threshold writer
 does not itself impose the UI bounds. That explains why a persisted/runtime
 value can differ from what an ordinary HA number control permits; it does not
 make arbitrary out-of-range writes supported tuning.
 
-Do not round 0.35 up to 0.50 just to make a form happy, or lower thresholds as a
-substitute for validation. Record this exception during backup/restore and use
-the existing [wake-word evaluation workflow](custom-wake-word.md). The previous
-short **Мышка** candidate was withdrawn after frequent false activations.
+Do not restore the old 0.35 value from an earlier receipt or lower thresholds as
+a substitute for validation. Use the existing
+[wake-word evaluation workflow](custom-wake-word.md), including representative
+room noise and human positives. The previous short **Мышка** candidate was
+withdrawn after frequent false activations.
 
 Both slots otherwise used Chirp, Pulse, Default phase overrides, Whole file,
 650 ms buffer, zero follow-up, 15 s listening limit, 90 s thinking limit and
