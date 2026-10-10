@@ -1,9 +1,105 @@
 # Operational findings and remaining limits
 
 This record brings together the two-Dot configuration, voice diagnosis,
-EchoLocal companion installation and ADB checks through **October 4, 2026**.
+EchoLocal companion installation and ADB checks, with incident updates through
+**October 8 Pacific / October 9 UTC, 2026**.
 It is a dated deployment record. It does not imply that every feature has been
 tested or that every issue listed below is fixed.
+
+## Unwanted wake activations — 2026-10-08 Pacific / 2026-10-09 UTC
+
+The owner reported both Dots activating without speech. Native detector logs
+confirmed acoustic wake events before HA started recognition. The short
+`myshka_owner_raw_v1` model was inactive on both; the active pair was
+`okay_nabu` and `privet_myshka_v1`. Both installed executables remained EchoLocal
+0.0.8. Reading the model files over ADB confirmed identical bytes on the two Dots:
+
+- `okay_nabu.tflite`: 60,264 bytes, SHA-256
+  `0689abe1912a95a3318a0d8cb2e67bad0cbcfe3e24dd6e050c75debddfb6f891`.
+- `privet_myshka_v1.tflite`: 51,344 bytes, SHA-256
+  `20b28cd466a8c65aee5ac827b3e6a6d492b73645a510dffb2aacd81e1ae591eb`.
+
+The first Dot's available 44-minute log contained one custom-word detection at
+startup, with peak/crossing score **0.443** against cutoff **0.35**. No HA voice
+subscriber was connected yet, so that event did not open a conversation. The
+second Dot's available 196-minute log contained two custom-word detections
+(peaks **0.743** and **0.449**, cutoff **0.35**) and one Okay Nabu detection
+(peak **0.921**, cutoff **0.85**). These three turns ended in recognition failure
+or a listening timeout. No household audio was retained for this audit, so the
+logs alone cannot establish what acoustic input caused each event. Counts from
+these unequal retained windows are not a measured false-activation rate.
+
+The low custom cutoff admits the observed weak detections. EchoLocal 0.0.8
+invokes the wake callback when the detector score crosses its cutoff; it does
+not first require a separate speech/VAD decision. Its 300 ms detector `Hold`
+tracks the peak **after** the callback; it is not a 300 ms confirmation gate.
+The subsequent 800 ms refractory interval only suppresses immediate repeats.
+Changing HA end-of-speech VAD therefore does not directly fix these wake events.
+See the pinned [detector implementation](https://github.com/ygelfand/echolocal/blob/0.0.8/internal/feature/detect/engine.go).
+
+Both Dots were changed through HA's existing number controls:
+
+- Slot 1, Okay Nabu: **0.85 → 0.95**.
+- Slot 2, Привет, Мышка: **0.35 → 0.90**.
+
+These are conservative operating cutoffs above the observed incident peaks,
+not probabilities of correctness or a newly validated calibration. Comparison
+of all 62 native controls per device found only those two changes on each.
+Both active model IDs and both FCC assistant selections were retained. ADB
+readback of `/data/misc/echolocal/state.json` confirmed persistence. Follow-up
+listening and recording retention remained zero. Existing differences in speaker
+volume and denoising were left unchanged. No audio was recorded or played, no
+model was retrained, and no firmware or provider was replaced.
+
+### HA selector mismatch
+
+HA initially displayed `no_wake_word` in both first-Dot selectors while the
+native API and persisted state showed both models active. Reloading that
+device's ESPHome config entry alone did not correct it. The HA selector code
+restores its previous display selection and only automatically adopts a native
+selection when there is exactly one active model; a two-model device can thus
+remain misleadingly displayed as disabled.
+
+Selecting Okay Nabu and then the custom phrase restored the native pair, but an
+immediate config response left the second HA selector showing `no_wake_word`
+during model activation. After verifying that both native models were loaded,
+reselecting the custom phrase synchronized the display. All four HA selectors
+then matched the native configuration. The brief first-slot selection cleared
+and reloaded the second model; it was not a firmware reboot. This is an
+operational recovery, not a patch to HA's selector synchronization.
+
+### Acceptance and recurrence
+
+After selector synchronization, a second passive observation covered **175 s**
+of first-Dot logs and **180 s** of second-Dot logs. Neither contained a new wake
+detection, near-miss event or turn start; both continued processing about
+50 microphone frames per second. This short window confirms that detection was
+running without an immediate recurrence. It does not establish an acceptable
+long-term false-activation rate, and no attended spoken-phrase test was performed.
+
+The change requires continued room-noise and attended phrase testing. The older
+long model detected only **1/8** raw owner validation positives even at 0.35 in
+the prior adaptation evaluation. Raising its cutoff cannot correct that weak
+recall and can make genuine phrases harder to trigger. Do not restore 0.35 to
+compensate without evaluating representative negatives. The frozen synthetic
+results at 0.90 remain historical evidence, not proof of present household
+reliability. See [training history](training-history.md).
+
+For another incident:
+
+1. Note the time, affected Dot, and whether it chirped/listened or only showed a
+   ring effect. Read the native active IDs and thresholds as well as HA's display.
+2. Fetch native `logs` and correlate `wake detected` (model, crossing, peak,
+   cutoff) with `turn started` and the HA pipeline result. A button/API start or
+   follow-up turn is not evidence of acoustic phrase detection.
+3. Preserve private logs before restarting. Diagnose recognition/provider
+   failures separately: a false wake can open an empty recognition turn, while
+   the same generic error can also arise from an independent provider failure.
+4. If a model continues firing, temporarily select **No wake word** for that
+   slot and verify the native active list actually excludes it. The physical
+   button remains available. Collect any additional labelled room audio only
+   through an explicitly coordinated recording session, then use the
+   [training/evaluation workflow](../training/README.md) before redeployment.
 
 ## Runtime identity and configuration
 
@@ -20,10 +116,12 @@ native setting comparison differed only in speaker volume: 26/30 versus 25/30.
 There is no automatic configuration-sync mechanism implied by this comparison.
 The practical settings and ranges are documented in [device controls](device-controls.md).
 
-Both assistant slots on both Dots select **FCC Russian Backup**. The active
-wake models are **Okay Nabu** and **Привет, Мышка**. The latter's stored 0.35
-cutoff is outside the advertised 0.50–0.99 HA number range. It remains an existing
-deployment exception, not a newly recommended tuning value.
+At the October 8 Pacific / October 9 UTC checkpoint, both assistant slots on
+both Dots selected **FCC Russian Backup**. The active wake models were
+**Okay Nabu** and **Привет, Мышка**, with cutoffs **0.95** and **0.90**
+respectively, after the unwanted-activation incident above. The earlier 0.35
+custom cutoff was outside the advertised 0.50–0.99 HA number range and was no
+longer the deployed setting at that checkpoint.
 
 The short **Мышка** candidate was removed from active use after the owner reported
 frequent quiet-room false activations. Its files can remain in the model cache;
@@ -137,7 +235,7 @@ MACs, serials, Noise PSKs, tokens, signed media URLs, personal transcripts,
 audio, trained weights and identifying screenshots stay in ignored private
 storage. The JSON contract intentionally exports no state values.
 
-This documentation update queried entity metadata and binary version only.
+The October 4 documentation update queried entity metadata and binary version only.
 It did not change device controls, activate a model, enable recording, restart
 a Dot or modify the firewall. A future check should record its date/version and
 update this ledger when an unresolved item is actually reproduced or fixed.
