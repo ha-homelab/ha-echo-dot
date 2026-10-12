@@ -28,7 +28,7 @@ ml-dtypes==0.5.4
 mmap-ninja==0.9.0
 namex==0.1.0
 numpy==1.26.4
-onnxruntime==1.30.0
+onnxruntime==1.31.0
 opt-einsum==3.4.0
 optree==0.20.0
 packaging==26.3
