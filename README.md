@@ -98,3 +98,9 @@ The destination must not exist. This copies only [allowlisted files](public-file
 See [contribution and test requirements](CONTRIBUTING.md), the
 [security reporting policy](SECURITY.md), [security design](docs/security-design.md),
 and the [OpenSSF evidence and remaining criteria](docs/openssf-evidence.md).
+
+## Offline parser fuzz tests
+
+The [fuzzing guide](docs/fuzzing.md) documents synthetic Go fuzz tests for model
+metadata and WAV input, local reproduction, and their limits. A future RC-only
+shared workflow is staged; this repository does not yet run hosted RC campaigns.

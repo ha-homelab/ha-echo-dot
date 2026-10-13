@@ -8,6 +8,8 @@ SECURITY.md
 docs/security-design.md
 docs/openssf-evidence.md
 .github/workflows/tests.yml
+.github/fuzz.json
+docs/fuzzing.md
 THIRD_PARTY_NOTICES.md
 public-files.txt
 docs/runbook.md
@@ -69,6 +71,7 @@ training/validation/README.md
 training/validation/THIRD_PARTY.md
 training/validation/batch.go
 training/validation/batch_test.go
+training/validation/fuzz_test.go
 training/validation/cmd/gofeatures/main.go
 training/validation/compare_frontends.py
 training/validation/compare_tflite.py
