@@ -43,3 +43,27 @@ The public destination is [ha-homelab/ha-echo-dot](https://github.com/ha-homelab
 The source workspace retains an ignored `private/operations.md`, per-device local inventory, protected keys, and historical documentation. Keep those available for maintaining the real installation. Historical originals may retain their original language and household-specific details; they are not part of the current English public documentation.
 
 Never use `git add -f` to bypass the private-file exclusions. `.gitignore` is a second line of protection, not a substitute for the public manifest and clean export.
+
+## Versioned host-tools previews
+
+`VERSION` starts the independent host-tools/documentation release line at 0.1.0.
+It is unrelated to EchoLocal, Fire OS, recovery or trained-model versions.
+The shared [release strategy](../RELEASING.md) and [operations guide](release-workflow.md)
+define beta, explicit RC and accepted-RC promotion. These publications contain
+only `ha-echo-dot-public-tools.tar.gz` from the reviewed `public-files.txt` list
+and its version metadata, plus shared provenance/validation evidence.
+
+The packager validates the entire allowlist before writing a new output
+directory, normalizes archive metadata for repeatability, then checks every
+archived member and byte against the allowlist. It never scans the whole checkout
+or includes ignored/private data. Run `python3 scripts/test_package_host_tools.py`
+and `python3 scripts/package_host_tools.py` to reproduce packaging in a clean
+checkout; the latter refuses an existing `release-dist` directory.
+
+Required CI retains synthetic host regressions, the Go race suite, static analysis
+and packaging-boundary tests. Public RCs additionally require [fuzzing](fuzzing.md).
+Downloading or passing this preview does not certify a firmware image, perform
+a conversion, or validate acoustic behavior. Stable acceptance for this source
+package means reviewing its inventory and running its applicable documented
+host checks; physical-device, model-parity and listening tests remain separate.
+The existing licensing notices and unresolved original-project grant are preserved.

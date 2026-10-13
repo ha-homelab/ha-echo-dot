@@ -9,6 +9,17 @@
       "training/validation",
       "mod",
       "download"
+    ],
+    [
+      "go",
+      "-C",
+      "training/validation",
+      "test",
+      "-c",
+      "-fuzz=Fuzz",
+      "-o",
+      "/dev/null",
+      "."
     ]
   ],
   "targets": [

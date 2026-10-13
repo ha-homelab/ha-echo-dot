@@ -23,3 +23,11 @@ Only documentation, helper/training source, configuration, dependency pins and s
 Keep upstream notices when building or distributing anything that includes their material. A published host/container image would need its own review of included components and redistribution obligations; this project currently documents a local build only.
 
 A license for this project's original documentation and helpers has not been selected. Public visibility is not a grant of an open-source license; do not infer licensing terms from an upstream dependency. A future licensing decision must be recorded explicitly.
+
+## Vendored release tooling
+
+The shared release, versioning and workflow-contract scripts are vendored from
+[victron-venus/venus-os-ci-toolkit](https://github.com/victron-venus/venus-os-ci-toolkit).
+Their MIT notice is preserved in [third_party/venus-os-ci-toolkit-LICENSE](third_party/venus-os-ci-toolkit-LICENSE).
+That license covers the toolkit material, not the original project code whose
+licensing status is described above.

@@ -1,15 +1,18 @@
 # Offline input fuzzing
 
-This repository has local native Go fuzz targets for the offline wake-word
-validation tools. The prepared `.github/fuzz.json` manifest is **not connected to
-an RC release workflow yet**: this project currently has no versioned GitHub
-release lifecycle. There is no claim that hosted RC campaigns are running, and no
-fuzzing status badge is displayed until that lifecycle is adopted.
+This public repository runs native Go fuzz targets for the offline wake-word
+validation tools as part of an explicit release candidate. The manifest
+[`.github/fuzz.json`](../.github/fuzz.json) uses the shared
+`venus-os-ci-toolkit` runner. It accepts only public default-branch RC requests,
+fetches dependencies during setup, then runs two isolated 60-second campaigns
+with two workers and no network access. A failed campaign blocks publication.
 
-The intended shared policy is public repositories and explicit release candidates
-only; no mutation campaigns on pushes, PRs, betas or scheduled nightlies. Ordinary
-Go tests continue to replay the small deterministic seed corpus. This is native
-Go fuzzing, not membership in Google's hosted OSS-Fuzz service.
+There are no mutation campaigns on pushes, PRs, betas or scheduled nightlies.
+Ordinary Go tests continue to replay the small deterministic seed corpus. Stable
+promotion uses the accepted RC's evidence without repeating mutation or rebuilding.
+The README badge describes this policy; the exact RC Actions run and report show
+actual results. This is native Go fuzzing, not membership in Google's hosted
+OSS-Fuzz service.
 
 ## Target scope
 
@@ -48,7 +51,6 @@ identifiers or personal recordings. Security-sensitive findings follow
 [SECURITY.md](../SECURITY.md). See [Go's fuzzing guide](https://go.dev/doc/security/fuzz/)
 for corpus format, minimization and troubleshooting.
 
-When a reviewed release adapter is available, the prepared manifest requests two
-60-second targets with two workers and isolated networking after dependency setup.
-The eventual badge must describe the actual policy, while source-bound Actions
-reports provide the pass/fail evidence for each RC.
+Keep the target manifest and this guide aligned when changing the campaign
+scope. Source-only release contents and the separate hardware/model acceptance
+boundaries are documented in [publication](publication.md).
