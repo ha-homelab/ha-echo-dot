@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.1.0] - Host tools preview
 
 - Add local synthetic model-metadata and WAV fuzz tests. Invalid model tensor
   references now return validation errors instead of panicking. Public RCs run
@@ -18,3 +18,17 @@
 - Document contributions, private vulnerability reporting, trust boundaries and
   partial OpenSSF evidence. Export these files through the public manifest.
 - No firmware, model, credential, device setting or license grant is changed.
+
+### Upgrade
+
+This first 0.1.0 host-tools preview is source-only. Unpack it into a new directory
+and follow the existing host-tool instructions. It does not install firmware,
+replace a model, alter an Echo or migrate private training data. Review device
+and model compatibility separately before using any tool on hardware.
+
+### Security
+
+Malformed model metadata now returns validation errors instead of panicking.
+RC fuzzing exercises only synthetic metadata and WAV inputs in an isolated
+runner. The archive contains the public allowlist only; never place credentials,
+recordings, trained model weights or device inventories in public reports.
