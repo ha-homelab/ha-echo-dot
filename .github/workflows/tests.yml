@@ -1,17 +1,14 @@
 name: Host regression tests
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
-  group: host-tests-${{ github.ref }}
-  cancel-in-progress: true
+  group: host-tests-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   python:
@@ -40,6 +37,7 @@ jobs:
           sudo apt-get install --yes ffmpeg
       - name: Run synthetic host contracts without training or device access
         run: |
+          python scripts/test_package_host_tools.py
           python scripts/test_prepare_public_release.py
           python scripts/prepare_public_release.py --check-only
           python training/test_pipeline.py

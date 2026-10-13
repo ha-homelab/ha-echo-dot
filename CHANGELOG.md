@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add local synthetic model-metadata and WAV fuzz tests. Invalid model tensor
+  references now return validation errors instead of panicking. Public RCs run
+  bounded isolated campaigns through the shared release tooling.
+- Start the separate 0.1.0 host-tools/documentation preview line with deterministic
+  allowlisted source archives. No firmware, models or private audio is packaged.
+
 - Update the CI lock resolver to uv 0.12.18, which fixes the Windows wheel
   extraction path traversal in GHSA-2cv4-cqwr-gwf7. The training dependency
   lock and supported runtime versions remain unchanged.

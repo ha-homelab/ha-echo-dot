@@ -98,3 +98,14 @@ The destination must not exist. This copies only [allowlisted files](public-file
 See [contribution and test requirements](CONTRIBUTING.md), the
 [security reporting policy](SECURITY.md), [security design](docs/security-design.md),
 and the [OpenSSF evidence and remaining criteria](docs/openssf-evidence.md).
+
+## Host-tools releases and fuzzing
+
+[![Fuzzing: RC only](https://img.shields.io/badge/Fuzzing-RC%20only-blue)](docs/fuzzing.md)
+
+Versioned previews contain allowlisted public host-tool source and documentation,
+not firmware or models. See [publication](docs/publication.md) and the
+[release strategy](RELEASING.md). The [fuzzing guide](docs/fuzzing.md) explains
+synthetic model-metadata and WAV tests, local reproduction, budgets and limits.
+Only public release candidates run mutation campaigns; PRs and betas replay
+ordinary deterministic tests.

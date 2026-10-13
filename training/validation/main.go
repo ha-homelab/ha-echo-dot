@@ -253,8 +253,26 @@ func run() error {
 	return enc.Encode(report)
 }
 func checkModel(m *model.Model) ([]string, error) {
-	if len(m.Subgraphs) == 0 {
+	if m == nil || len(m.Subgraphs) == 0 {
 		return nil, errors.New("no subgraphs")
+	}
+	// Validate graph references before looking up the main input/output. Model
+	// metadata is untrusted; malformed indices must produce errors, not panics.
+	for gi, graph := range m.Subgraphs {
+		for _, indices := range [][]int{graph.Inputs, graph.Outputs} {
+			for _, index := range indices {
+				if index < 0 || index >= len(graph.Tensors) {
+					return nil, fmt.Errorf("subgraph %d interface tensor %d is out of bounds", gi, index)
+				}
+			}
+		}
+		for oi, operator := range graph.Operators {
+			for _, index := range operator.Outputs {
+				if index < 0 || index >= len(graph.Tensors) {
+					return nil, fmt.Errorf("subgraph %d op %d output tensor %d is out of bounds", gi, oi, index)
+				}
+			}
+		}
 	}
 	sg := m.Subgraphs[0]
 	if len(sg.Inputs) != 1 || len(sg.Outputs) != 1 {
@@ -427,6 +445,10 @@ func readWAV(path string) ([]int16, error) {
 	if err != nil {
 		return nil, err
 	}
+	return parseWAV(b)
+}
+
+func parseWAV(b []byte) ([]int16, error) {
 	if len(b) < 12 || string(b[:4]) != "RIFF" || string(b[8:12]) != "WAVE" {
 		return nil, errors.New("need RIFF WAVE")
 	}

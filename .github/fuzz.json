@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "language": "go",
+  "go-version-file": "training/validation/go.mod",
+  "setup": [
+    [
+      "go",
+      "-C",
+      "training/validation",
+      "mod",
+      "download"
+    ],
+    [
+      "go",
+      "-C",
+      "training/validation",
+      "test",
+      "-c",
+      "-fuzz=Fuzz",
+      "-o",
+      "/dev/null",
+      "."
+    ]
+  ],
+  "targets": [
+    {
+      "name": "model-structure",
+      "engine": "go",
+      "command": [
+        "go",
+        "test",
+        ".",
+        "-run=^$",
+        "-fuzz=^FuzzModelStructure$"
+      ],
+      "seconds": 60,
+      "cwd": "training/validation"
+    },
+    {
+      "name": "wav-input",
+      "engine": "go",
+      "command": [
+        "go",
+        "test",
+        ".",
+        "-run=^$",
+        "-fuzz=^FuzzWAVInput$"
+      ],
+      "seconds": 60,
+      "cwd": "training/validation"
+    }
+  ]
+}
