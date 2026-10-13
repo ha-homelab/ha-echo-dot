@@ -147,3 +147,5 @@ scripts/write_web_build_metadata.py
 
 scripts/release_provenance.py
 scripts/merge_oci_archives.py
+
+.github/release-tests/test_release_import_modes.py
