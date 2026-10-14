@@ -1,5 +1,7 @@
 # Offline input fuzzing
 
+> **Local packaging:** `python3 scripts/release.py package` is unsupported in this repository because no shell packaging adapter is installed. Use the [project commands below](#local-release-packaging); the generic example in `release-workflow.md` does not apply here.
+
 This public repository runs native Go fuzz targets for the offline wake-word
 validation tools as part of an explicit release candidate. The manifest
 [`.github/fuzz.json`](../.github/fuzz.json) uses the shared
@@ -54,3 +56,28 @@ for corpus format, minimization and troubleshooting.
 Keep the target manifest and this guide aligned when changing the campaign
 scope. Source-only release contents and the separate hardware/model acceptance
 boundaries are documented in [publication](publication.md).
+
+## Local release packaging
+
+Use Python 3.12+ from the repository root:
+
+```sh
+python3 scripts/test_package_host_tools.py
+python3 scripts/prepare_public_release.py --check-only
+python3 scripts/package_host_tools.py
+```
+
+This writes the reviewed host-tools source archive and version metadata to a new `release-dist/` directory. It packages the public allowlist without building firmware or model weights. Use a clean disposable checkout and a new output directory.
+
+To reproduce an already allocated beta or RC, first check out the exact source
+commit from its published `release-manifest.json`, restore that manifest's
+`version_plan` object as `.release-plan.json`, and apply its version overlay:
+
+```sh
+python3 scripts/version_plan.py sync --root . --plan .release-plan.json
+```
+
+Then run the project commands above. Keep the source, plan and channel together;
+do not invent a release sequence or edit version fields by hand. Local packaging
+does not create a qualified release: the hosted pipeline still verifies the full
+build inventory, provenance and, for an RC, its own isolated fuzz report.
