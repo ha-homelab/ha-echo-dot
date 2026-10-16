@@ -1,6 +1,7 @@
 # Quality evidence and limitations
 
-Host CI exercises packaging, public export boundaries, synthetic training/data
+Host CI runs Ruff F diagnostics across the complete Git-tracked Python inventory,
+with isolated configuration and inline suppressions ignored. It also exercises packaging, public export boundaries, synthetic training/data
 pipeline helpers, recording interfaces and evaluation tools. The reference
 training lock is checked separately from the lighter host environment. Neither
 host-only tests nor lock resolution demonstrate all training-runtime dependencies

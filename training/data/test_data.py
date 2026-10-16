@@ -1,6 +1,5 @@
 """Small local fixtures; no model/data downloads or synthesis."""
 import hashlib
-import io
 import json
 from pathlib import Path
 import tarfile

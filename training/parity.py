@@ -1,6 +1,5 @@
 """Compare exact-Go and TensorFlow output traces without hiding numeric failures."""
 import argparse
-import json
 from pathlib import Path
 import subprocess
 import sys
