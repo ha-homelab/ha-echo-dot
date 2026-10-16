@@ -8,10 +8,19 @@
 - Bind release evidence to the exact source and toolkit revision, validate seed corpora, and retain engine execution counts and diagnostic artifacts.
 - Document the fuzzing scope, resource limits, and the distinction between synthetic checks and target acceptance.
 
+### Documentation
+
+- Add Russian, German, Spanish and French README entry points with a shared topic
+  index, translation policy and accessible SVG architecture diagram.
+- Distinguish the EchoLocal, EchoMuse and Android Show routes and label recorded
+  validation as historical evidence rather than current device state.
+- Include the new documentation in the public source distribution.
+
 ### Upgrade
 
-Use the existing installation or update procedure. This release changes validation
-and release tooling; existing user configuration and data formats are preserved.
+Use the existing installation or update procedure. This host-tools release updates
+validation, release tooling and documentation; existing user configuration and data
+formats are preserved.
 Keep the previous immutable release for rollback. Test the exact RC package on the
 intended target before accepting a stable promotion.
 

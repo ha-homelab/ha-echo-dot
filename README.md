@@ -1,10 +1,14 @@
 # ha-echo-dot — Echo Dot 2 as a Home Assistant voice satellite
 
+[English](README.md) · [Русский](README.ru.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md)
+
+**Documentation:** [topic index](docs/README.md) · [translation scope and maintenance](docs/i18n.md). Localized READMEs cover the overview, setup sequence and limitations; detailed operational guides remain in English.
+
 [ha-homelab/ha-echo-dot](https://github.com/ha-homelab/ha-echo-dot) documents conversion of an existing Amazon Echo Dot 2 into an EchoLocal voice satellite. This repository contains conversion instructions, USB-host helpers, and an explicit wake-word training/evaluation workflow. Firmware, audio datasets, trained weights, device backups, Wi-Fi credentials, and encryption keys are not included.
 
 **Start with the [ordered runbook](docs/runbook.md).** It explains what runs on the USB host, what changes on the Echo, and what to configure in Home Assistant, with a completion check before each next stage.
 
-## Tested result
+## Historical EchoLocal baseline
 
 One **Echo Dot 2 / BISCUIT** completed this path on 2026-10-02 UTC:
 
@@ -14,9 +18,9 @@ The USB host was a Synology DS620slim running a dedicated Linux container. Home 
 
 This confirms one basic end-to-end voice test. Cold power cycling, a 20-command acceptance series, extended stability, recovery from backup, and unattended batch conversion have not been validated here. [Acceptance record](docs/acceptance-and-batch.md).
 
-A custom **Привет, Мышка** model is also installed in the second slot, with Okay Nabu retained in the first. Offline evaluation and deployment are complete, with two documented hard-negative errors. The initial user trial reported a problem; diagnosis is in progress and human spoken acceptance remains unconfirmed. See the [experiment and limitations](docs/custom-wake-word.md).
+In the recorded EchoLocal experiment, a custom **Привет, Мышка** model was installed in the second slot, with Okay Nabu retained in the first. Offline evaluation and deployment were completed for that experiment, with two documented hard-negative errors. The initial user trial reported a problem; the linked experiment does not establish human spoken acceptance. See the [experiment and limitations](docs/custom-wake-word.md).
 
-A separate **Привет, котик** recipe and candidate have now been trained and evaluated. The candidate remains private and undeployed: it detected 398/400 held-out synthetic positives, produced two hard-negative events, and failed strict numerical parity. The first verified ordinary-voice recording was missed in an offline diagnostic; personal adaptation and spoken acceptance remain pending. See the [Kotik stage record](docs/training-history.md#new-target-привет-котик).
+A separate **Привет, котик** recipe and candidate were trained and evaluated. In that record, the candidate was private and undeployed: it detected 398/400 held-out synthetic positives, produced two hard-negative events, and failed strict numerical parity. The first verified ordinary-voice recording was missed in an offline diagnostic; personal adaptation and spoken acceptance remain pending. See the [Kotik stage record](docs/training-history.md#new-target-привет-котик).
 
 ## Required components
 
@@ -28,6 +32,8 @@ A separate **Привет, котик** recipe and candidate have now been train
 **ESPHome Device Builder, HACS, Music Assistant, and a separate Linux Voice Assistant are not required for basic voice operation.** EchoLocal implements the ESPHome API on the Echo; it is not an ESP32 firmware project to compile in Device Builder.
 
 ## What runs where
+
+![Linux USB host for conversion; EchoLocal connects to Home Assistant over Wi-Fi](docs/assets/architecture.svg)
 
 ```mermaid
 flowchart LR
@@ -83,6 +89,11 @@ python3 scripts/prepare_public_release.py /path/to/new/ha-echo-dot-public
 The destination must not exist. This copies only [allowlisted files](public-files.txt); it does not create a remote repository or publish anything. Review the output before sharing. No license for the original material has been selected; public visibility does not grant a separate reuse license. Keep the original workspace's private records, downloads, logs, and backups out of the repository.
 
 ## Related projects
+
+- [EchoMuse on emOS](https://github.com/ha-homelab/ha-echomuse) documents the separate
+  replacement stack now used by the related Dot project. Use its access, configuration
+  and recovery procedures for devices running EchoMuse; the historical EchoLocal
+  state above must not be interpreted as their current configuration.
 
 - [Echo Show 5 Gen2 conversion](https://github.com/ha-homelab/ha-echo-show-5) is a
   separate Android display/voice-client route. Its firmware and recovery steps
