@@ -159,3 +159,7 @@ README.fr.md
 docs/README.md
 docs/i18n.md
 docs/assets/architecture.svg
+GOVERNANCE.md
+CODE_OF_CONDUCT.md
+ROADMAP.md
+docs/quality.md
