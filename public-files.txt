@@ -163,3 +163,11 @@ GOVERNANCE.md
 CODE_OF_CONDUCT.md
 ROADMAP.md
 docs/quality.md
+training/data/download_tls.py
+training/data/tls_key_policy.py
+training/data/_darwin_certificate.py
+training/data/test_tls.py
+requirements-strict-tls.txt
+requirements-tls-test.txt
+docs/strict-training-tls.md
+requirements-lint.txt

@@ -18,9 +18,7 @@ import math
 import os
 from pathlib import Path
 import random
-import sys
 import time
-import urllib.request
 import wave
 
 from common import (digest as sha256, download, immutable_bytes, immutable_json,

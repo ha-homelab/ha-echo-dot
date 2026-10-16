@@ -30,10 +30,11 @@ analyzed.
 
 The owner has licensed original code and documentation under [MIT](../LICENSE); [third-party notices](../THIRD_PARTY_NOTICES.md) preserve upstream terms. Full inference/runtime, memory-safety and acoustic qualification remain separate from fast host CI.
 
-The project maintainer must confirm secure-design/common-error knowledge for
-this project and supply the history of bug, enhancement and vulnerability
-reports across all channels. Confirm actual private-reporting availability and
-review/branch settings. Verify releases have meaningful change/security notes;
+On 2026-10-16, the maintainer personally confirmed secure-design/common-error
+knowledge and no bug, enhancement or vulnerability reports outside GitHub in
+the preceding twelve months. GitHub private reporting is enabled. Public
+issue history, repository settings and technical evidence still require their
+own assessment. See [quality evidence](quality.md). Verify releases have meaningful change/security notes;
 measure test coverage and map static/dynamic analysis to every project-owned
 language. Review each cryptographic criterion individually. Do not transfer
 another repository's attestations, badge identifier or test results here.

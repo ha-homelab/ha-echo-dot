@@ -1,4 +1,4 @@
-import base64, io, json, math, os, shutil, tempfile, threading, unittest, urllib.request, urllib.error, uuid, wave
+import base64, io, json, math, shutil, tempfile, threading, unittest, urllib.request, urllib.error, uuid, wave
 from array import array
 from pathlib import Path
 from server import Store, Handler, ThreadingHTTPServer, PLAN, LEGACY_HINTS, inspect_wav
@@ -54,7 +54,7 @@ class RecorderTests(unittest.TestCase):
         self.store.path.write_text(json.dumps(changed))
         with self.assertRaisesRegex(ValueError,'plan changed'):Store(self.store.root,shutil.which('ffmpeg'))
     def test_review_gate_labels_and_frozen_test(self):
-        take=self.store.capture(self.body());test=self.store.capture(self.body('test',freq=390));dest=self.root/'export'
+        take=self.store.capture(self.body());self.store.capture(self.body('test',freq=390));dest=self.root/'export'
         with self.assertRaisesRegex(ValueError,'transcript'):export(self.store.root,dest)
         review(self.store.root,take['id'],'Привет, Мышка!');counts=export(self.store.root,dest)
         self.assertEqual(counts['myshka']['train']['positive'],1);self.assertEqual(counts['privet_myshka']['train']['positive'],1)
