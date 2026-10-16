@@ -28,7 +28,7 @@ analyzed.
 
 ## Unresolved criteria and applicability
 
-An explicit license grant for the project-owned source is absent. Resolve ownership and publish the selected license before claiming FLOSS criteria. Full inference/runtime, memory-safety and acoustic qualification remain separate from fast host CI.
+The owner has licensed original code and documentation under [MIT](../LICENSE); [third-party notices](../THIRD_PARTY_NOTICES.md) preserve upstream terms. Full inference/runtime, memory-safety and acoustic qualification remain separate from fast host CI.
 
 The project maintainer must confirm secure-design/common-error knowledge for
 this project and supply the history of bug, enhancement and vulnerability

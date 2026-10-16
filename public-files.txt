@@ -1,6 +1,7 @@
 # Only these documentation, source, recipe, dependency and test files belong in the public export.
 .gitignore
 README.md
+LICENSE
 CONTRIBUTING.md
 CHANGELOG.md
 SECURITY.md

@@ -86,7 +86,7 @@ Prepare a fresh public copy with:
 python3 scripts/prepare_public_release.py /path/to/new/ha-echo-dot-public
 ```
 
-The destination must not exist. This copies only [allowlisted files](public-files.txt); it does not create a remote repository or publish anything. Review the output before sharing. No license for the original material has been selected; public visibility does not grant a separate reuse license. Keep the original workspace's private records, downloads, logs, and backups out of the repository.
+The destination must not exist. This copies only [allowlisted files](public-files.txt); it does not create a remote repository or publish anything. Review the output before sharing. Original material is licensed under MIT; the separate third-party notices still apply. Keep the original workspace's private records, downloads, logs, and backups out of the repository.
 
 ## Related projects
 
@@ -120,3 +120,7 @@ not firmware or models. See [publication](docs/publication.md) and the
 synthetic model-metadata and WAV tests, local reproduction, budgets and limits.
 Only public release candidates run mutation campaigns; PRs and betas replay
 ordinary deterministic tests.
+
+## License
+
+Original project code and documentation are available under the [MIT license](LICENSE). [Third-party notices](THIRD_PARTY_NOTICES.md) preserve separate terms for included or referenced upstream material. This grant does not relicense firmware, models, recordings, datasets or other third-party artifacts.
