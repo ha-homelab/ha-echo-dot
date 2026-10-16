@@ -1,5 +1,7 @@
 # Echo Dot 2 → EchoLocal → Home Assistant
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15594/badge)](https://www.bestpractices.dev/projects/15594)
+
 [English](README.md) · [Русский](README.ru.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md)
 
 Ce document est une présentation traduite accompagnée d’un parcours de démarrage. Les procédures détaillées et les commandes restent pour le moment maintenues en anglais ; les liens y renvoient. La langue du README ne change ni la reconnaissance, ni la voix de réponse, ni le mot d’activation.

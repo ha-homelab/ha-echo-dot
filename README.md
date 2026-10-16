@@ -1,5 +1,7 @@
 # ha-echo-dot — Echo Dot 2 as a Home Assistant voice satellite
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15594/badge)](https://www.bestpractices.dev/projects/15594)
+
 [English](README.md) · [Русский](README.ru.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md)
 
 **Documentation:** [topic index](docs/README.md) · [translation scope and maintenance](docs/i18n.md). Localized READMEs cover the overview, setup sequence and limitations; detailed operational guides remain in English.
