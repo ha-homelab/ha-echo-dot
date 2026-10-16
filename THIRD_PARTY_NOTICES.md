@@ -34,7 +34,7 @@ That preserved license covers toolkit material; the root MIT license separately 
 ## Verified-chain TLS helpers
 
 The exact certificate-key policy and native macOS metadata helper are adapted
-from [google-home-voice-stats](https://github.com/victron-venus/google-home-voice-stats/blob/4cbd3296bd08c515198136cb9480e3a6ba734768/igw_google_voice/tls_policy.py),
+from [google-home-voice-stats](https://github.com/4alvit/google-home-voice-stats/blob/4cbd3296bd08c515198136cb9480e3a6ba734768/igw_google_voice/tls_policy.py),
 Copyright (c) 2026 victron-venus, under the MIT license. The original MIT
 permission and disclaimer are retained in the root [LICENSE](LICENSE); keep
 this attribution when distributing the helpers.
