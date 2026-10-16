@@ -29,7 +29,7 @@ upstream service, hardware model or production deployment.
 
 ## Remaining security assessment
 
-An explicit license grant for the project-owned source is absent. Resolve ownership and publish the selected license before claiming FLOSS criteria. Full inference/runtime, memory-safety and acoustic qualification remain separate from fast host CI.
+The owner has licensed original code and documentation under [MIT](../LICENSE); [third-party notices](../THIRD_PARTY_NOTICES.md) preserve upstream terms. Full inference/runtime, memory-safety and acoustic qualification remain separate from fast host CI.
 
 Report new issues through [SECURITY.md](../SECURITY.md). An OpenSSF assessment
 records evidence and applicability; it is not a guarantee that a system is safe.

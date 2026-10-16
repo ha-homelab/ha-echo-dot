@@ -57,3 +57,5 @@ uv pip compile requirements-host-tests.in --generate-hashes --universal --python
 
 Run the documented tests in a fresh virtual environment after updating a lock.
 The host-test environment uses Python 3.11 and `python -m pip install --require-hashes --only-binary=:all: -r requirements-host-tests.txt`.
+
+Contributions to original project code and documentation are made under the [MIT license](LICENSE). Preserve upstream copyright, license and NOTICE files for third-party material.
