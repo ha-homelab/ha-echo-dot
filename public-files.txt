@@ -149,3 +149,12 @@ scripts/release_provenance.py
 scripts/merge_oci_archives.py
 
 .github/release-tests/test_release_import_modes.py
+
+# Localized entry points and shared documentation navigation
+README.ru.md
+README.de.md
+README.es.md
+README.fr.md
+docs/README.md
+docs/i18n.md
+docs/assets/architecture.svg
