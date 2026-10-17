@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Use Go 1.27.2 for host validation and release fuzzing, fixing the upstream fuzz-coordinator deadline race while retaining the Go 1.26 language baseline.
+
 - License original host tools and documentation under MIT while preserving third-party notices.
 - Verify the strict TLS profile used for training-artifact downloads and exercise native wake-word helpers in CI.
 - Document maintenance, vulnerability reporting, release fuzzing and the limits of project security evidence.
