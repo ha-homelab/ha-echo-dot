@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.2] - 2026-10-17
+
+### Changed
+
+- License original host tools and documentation under MIT while preserving third-party notices.
+- Verify the strict TLS profile used for training-artifact downloads and exercise native wake-word helpers in CI.
+- Document maintenance, vulnerability reporting, release fuzzing and the limits of project security evidence.
+
+### Upgrade
+
+Use the existing host-tools installation procedure and preserve operator configuration, local models and audio separately. Retain the previous immutable release for rollback. Firmware conversion, training and device deployment remain explicit operations.
+
+### Security
+
+Artifact downloads use verified transport checks. Release checks use synthetic host inputs and do not distribute private audio, credentials, trained models or device firmware. Hardware and acoustic acceptance remain separate from publication.
+
 ## [0.1.1] - Development line
 
 ### Changed
