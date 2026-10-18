@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Update the locked truststore dependency from 0.10.4 to 0.10.5 for training-artifact HTTPS downloads, retaining native certificate verification and the existing strict TLS policy.
+- Update the truststore dependency from 0.10.4 to 0.10.5 in the locked macOS ARM64 training environment. Existing artifact-download TLS verification remains unchanged.
 - Synchronize the public host-tools version for this dependency maintenance release.
 
 ### Upgrade
