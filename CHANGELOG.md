@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.3] - 2026-10-18
+
+### Changed
+
+- Update the locked truststore dependency from 0.10.4 to 0.10.5 for training-artifact HTTPS downloads, retaining native certificate verification and the existing strict TLS policy.
+- Synchronize the public host-tools version for this dependency maintenance release.
+
+### Upgrade
+
+Unpack the verified host-tools archive into a new directory and use the documented locked environment setup. Preserve operator configuration, local models and audio separately, and retain the previous immutable release for rollback. Firmware conversion, model training and device deployment remain explicit operations.
+
+### Security
+
+Native trust-store integration and certificate/hostname verification remain required for artifact downloads. Release checks use synthetic host inputs and exclude private audio, credentials, trained models and device firmware. Hardware and acoustic acceptance remain separate from publication.
+
 ## [0.1.2] - 2026-10-17
 
 ### Changed
