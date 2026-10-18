@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.3] - 2026-10-18
+
+### Changed
+
+- Replace the obsolete Scorecard CI container with the reviewed, checksum-pinned scanner. Keep the upstream SARIF reporting policy, GitHub Security upload and retained report artifacts.
+- Update the truststore dependency from 0.10.4 to 0.10.5 in the locked macOS ARM64 training environment. Existing artifact-download TLS verification remains unchanged.
+- Synchronize the public host-tools version for this dependency maintenance release.
+
+### Upgrade
+
+Unpack the verified host-tools archive into a new directory and use the documented locked environment setup. Preserve operator configuration, local models and audio separately, and retain the previous immutable release for rollback. Firmware conversion, model training and device deployment remain explicit operations.
+
+### Security
+
+The replaced CI image contained 25 high-severity dependency findings in the recorded scan. The scanner replacement changes CI tooling, not the distributed application runtime. OpenSSF REST publication remains disabled as before.
+
+Native trust-store integration and certificate/hostname verification remain required for artifact downloads. Release checks use synthetic host inputs and exclude private audio, credentials, trained models and device firmware. Hardware and acoustic acceptance remain separate from publication.
+
 ## [0.1.2] - 2026-10-17
 
 ### Changed
