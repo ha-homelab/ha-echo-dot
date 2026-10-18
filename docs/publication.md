@@ -33,7 +33,7 @@ Review code and Markdown links in the exported directory. Keep placeholder names
 - All public files are English, apart from explicitly labelled example utterances if added later.
 - Local files and secrets are absent, not merely hidden in a diff or listed in `.gitignore` after being committed.
 - Third-party assets are linked to their upstream sources rather than redistributed.
-- The original documentation and helper code currently have no selected license. Do not infer a license from public visibility. If the owner later chooses one, add its full text as `LICENSE` and include it in `public-files.txt`.
+- Original documentation and helper code use the [MIT license](../LICENSE), included in `public-files.txt`. Third-party materials retain their own terms.
 - Add the chosen repository URL and maintainer contact only when those values are decided. Do not invent author identity or imply upstream endorsement.
 
 The public destination is [ha-homelab/ha-echo-dot](https://github.com/ha-homelab/ha-echo-dot). Repository creation, visibility, default branch, security settings and main-branch protection are managed by [terraform-github-ha-homelab](https://github.com/4alvit/terraform-github-ha-homelab) in its canonical HCP Terraform workspace. Review the staged file list against `public-files.txt` before every publication. The exporter itself never creates a repository or uploads files.
@@ -66,4 +66,4 @@ Downloading or passing this preview does not certify a firmware image, perform
 a conversion, or validate acoustic behavior. Stable acceptance for this source
 package means reviewing its inventory and running its applicable documented
 host checks; physical-device, model-parity and listening tests remain separate.
-The existing licensing notices and unresolved original-project grant are preserved.
+The root MIT grant and existing third-party licensing notices are preserved.

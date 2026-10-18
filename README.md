@@ -1,5 +1,7 @@
 # ha-echo-dot — Echo Dot 2 as a Home Assistant voice satellite
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/15594/badge)](https://www.bestpractices.dev/projects/15594)
+
 [English](README.md) · [Русский](README.ru.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [Français](README.fr.md)
 
 **Documentation:** [topic index](docs/README.md) · [translation scope and maintenance](docs/i18n.md). Localized READMEs cover the overview, setup sequence and limitations; detailed operational guides remain in English.
@@ -86,7 +88,7 @@ Prepare a fresh public copy with:
 python3 scripts/prepare_public_release.py /path/to/new/ha-echo-dot-public
 ```
 
-The destination must not exist. This copies only [allowlisted files](public-files.txt); it does not create a remote repository or publish anything. Review the output before sharing. No license for the original material has been selected; public visibility does not grant a separate reuse license. Keep the original workspace's private records, downloads, logs, and backups out of the repository.
+The destination must not exist. This copies only [allowlisted files](public-files.txt); it does not create a remote repository or publish anything. Review the output before sharing. Original material is licensed under MIT; the separate third-party notices still apply. Keep the original workspace's private records, downloads, logs, and backups out of the repository.
 
 ## Related projects
 
@@ -120,3 +122,14 @@ not firmware or models. See [publication](docs/publication.md) and the
 synthetic model-metadata and WAV tests, local reproduction, budgets and limits.
 Only public release candidates run mutation campaigns; PRs and betas replay
 ordinary deterministic tests.
+
+## License
+
+Original project code and documentation are available under the [MIT license](LICENSE). [Third-party notices](THIRD_PARTY_NOTICES.md) preserve separate terms for included or referenced upstream material. This grant does not relicense firmware, models, recordings, datasets or other third-party artifacts.
+
+
+## Project maintenance
+
+[Contribution guide](CONTRIBUTING.md) · [Security policy](SECURITY.md) ·
+[Governance](GOVERNANCE.md) · [Code of Conduct](CODE_OF_CONDUCT.md) ·
+[Roadmap](ROADMAP.md) · [Quality evidence and limits](docs/quality.md)

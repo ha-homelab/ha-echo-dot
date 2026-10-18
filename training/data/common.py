@@ -6,7 +6,6 @@ import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
-import shutil
 import stat
 import tarfile
 import time
@@ -14,6 +13,8 @@ import urllib.error
 import urllib.request
 import uuid
 import zipfile
+
+from download_tls import open_source
 
 
 def digest(path: Path, algorithm="sha256") -> str:
@@ -131,7 +132,7 @@ def download(record: dict, destination: Path) -> None:
             if current:
                 headers["Range"] = f"bytes={current}-"
             request = urllib.request.Request(record["url"], headers=headers)
-            with urllib.request.urlopen(request, timeout=60) as response:
+            with open_source(request, timeout=60) as response:
                 status = getattr(response, "status", None)
                 if current and status == 206:
                     expected_prefix = f"bytes {current}-"

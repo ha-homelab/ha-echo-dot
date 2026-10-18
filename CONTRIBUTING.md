@@ -57,3 +57,14 @@ uv pip compile requirements-host-tests.in --generate-hashes --universal --python
 
 Run the documented tests in a fresh virtual environment after updating a lock.
 The host-test environment uses Python 3.11 and `python -m pip install --require-hashes --only-binary=:all: -r requirements-host-tests.txt`.
+
+Contributions to original project code and documentation are made under the [MIT license](LICENSE). Preserve upstream copyright, license and NOTICE files for third-party material.
+
+
+All major functionality changes must include automated regression coverage and
+relevant negative cases, with test instructions documented in the PR. Resolve
+substantive compiler, linter and security-analysis findings before merge. Do not
+replace actual device acceptance with synthetic test success.
+
+See [governance](GOVERNANCE.md), [conduct](CODE_OF_CONDUCT.md),
+[security reporting](SECURITY.md) and the [roadmap](ROADMAP.md).

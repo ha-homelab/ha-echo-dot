@@ -2,6 +2,9 @@ module echolocal-model-validator
 
 go 1.26
 
+// Go 1.27 fixes the fuzz coordinator deadline race (golang/go#75804).
+toolchain go1.27.2
+
 require github.com/zserge/microwakeword v0.0.0-20260330234603-bfaf3840114e
 
 require github.com/google/flatbuffers v25.12.19+incompatible // indirect

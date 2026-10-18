@@ -118,7 +118,7 @@ and PyPI publication use verified stable assets as a separate explicit operation
 - Releases contain only allowlisted public host-tool source, documentation, recipes and dependency/test metadata; no firmware, model weights, datasets, recordings or credentials.
 - The host-tools VERSION is independent of EchoLocal, Fire OS, TWRP and trained-model versions.
 - Synthetic Python and Go validation does not establish hardware compatibility, acoustic acceptance or TensorFlow model parity.
-- Existing ownership and license notices are preserved; this release does not introduce a new license grant.
+- Original project sources use the root MIT license; existing upstream ownership and license notices are preserved.
 
 For public repositories, merge and verify the workflows before enabling the
 additive Terraform **CI gate** ruleset. Where release/deployment workflows use
