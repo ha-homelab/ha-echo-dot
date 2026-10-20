@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.4] - 2026-10-20
+
+### Changed
+
+- Update Markdown to 3.11.1, wrapt to 2.5.1 and filelock to 4.2.0 in the locked macOS ARM64 training environment. Keep the Python 3.11 reference platform and the existing TensorFlow, NumPy and model compatibility constraints.
+- Refresh CodeQL analysis to 4.39.0 in CI.
+- Include the shared CI/fuzzing toolkit update and configurable runner routing introduced since 0.1.3.
+
+### Upgrade
+
+Unpack the verified public host-tools archive into a new directory and recreate the documented locked environment. Preserve operator configuration, local models and audio separately, and retain the previous immutable release for rollback. Firmware conversion, training and device deployment remain explicit operations.
+
+### Validation
+
+The complete 61-package reference lock resolves for Python 3.11 on macOS 14 ARM64. Synthetic host regressions, public-export checks and Go race tests qualify the source package. Native TensorFlow training, model parity, hardware and acoustic acceptance remain separate.
+
+### Security
+
+Verify the published archive checksum and use the documented locked environment setup. Artifact-download TLS and hostname verification remain required. The beta contains only the public source allowlist, with no firmware, model weights, datasets, recordings or credentials.
+
 ## [0.1.3] - 2026-10-18
 
 ### Changed
