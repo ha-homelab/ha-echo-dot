@@ -42,7 +42,7 @@ pyyaml==6.0.3
 requests==2.34.2
 rich==15.0.0
 scipy==1.17.1
-setuptools==84.0.0
+setuptools==84.2.0
 six==1.17.0
 soundfile==0.14.0
 tensorboard==2.18.0
