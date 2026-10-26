@@ -36,3 +36,23 @@ working project build does not imply independently rebuilding unchanged external
 ROMs, EchoLocal, TensorFlow, Python or the operating system. The conversion host
 image has its own [Dockerfile](../host/synology/Dockerfile). Dependency security
 and physical-device acceptance remain separate checks.
+
+## Linux amd64 host image qualification
+
+The required `check-3 / Linux amd64 host image build` job runs on a GitHub-hosted
+Ubuntu runner through the single quality gate. It builds the unchanged
+`host/synology/Dockerfile` for `linux/amd64` from a temporary context containing
+only that Dockerfile and the official EchoLocal 0.0.8 binary, verified against
+the same SHA-256 required by the Dockerfile. No credentials, firmware images or
+device files enter the build context.
+
+The job inspects the resulting image configuration and retains a
+`host-image-build-receipt` artifact with the source commit, Dockerfile and binary
+hashes, base image, target architecture and resulting image ID. It does not start
+the completed image, execute EchoLocal, access USB, perform a conversion, train a
+model, record audio, deploy anything or publish the image.
+
+A green result establishes host-image buildability for those inputs. APT package
+versions remain unpinned, so it does not establish bit-for-bit reproducibility,
+upstream binary rebuilds, runtime USB behavior or compatibility with a physical
+Echo. The receipt records those limits.

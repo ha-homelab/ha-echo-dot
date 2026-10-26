@@ -1,0 +1,106 @@
+name: Host image build
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: host-image-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Linux amd64 host image build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      ECHOLOCAL_ASSET_URL: https://github.com/ygelfand/echolocal/releases/download/0.0.8/echolocal_linux_x86_64
+      ECHOLOCAL_ASSET_SHA256: a350601761bc52ef865eba63b7117e6a63315c9541a780bd1f6d6984b7bde396
+    steps:
+      - uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Prepare a minimal context with the verified official binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          HOST_IMAGE_BUILD_ROOT="$(mktemp -d "$RUNNER_TEMP/echolocal-host-build.XXXXXX")"
+          printf 'HOST_IMAGE_BUILD_ROOT=%s\n' "$HOST_IMAGE_BUILD_ROOT" >> "$GITHUB_ENV"
+          mkdir "$HOST_IMAGE_BUILD_ROOT/context"
+          curl --fail --location --proto '=https' --tlsv1.2 \
+            --retry 3 --connect-timeout 20 --max-time 180 \
+            --output "$HOST_IMAGE_BUILD_ROOT/echolocal.download" "$ECHOLOCAL_ASSET_URL"
+          printf '%s  %s\n' "$ECHOLOCAL_ASSET_SHA256" "$HOST_IMAGE_BUILD_ROOT/echolocal.download" \
+            | sha256sum --check --strict -
+          install -m 0644 host/synology/Dockerfile "$HOST_IMAGE_BUILD_ROOT/context/Dockerfile"
+          install -m 0644 "$HOST_IMAGE_BUILD_ROOT/echolocal.download" \
+            "$HOST_IMAGE_BUILD_ROOT/context/echolocal_linux_x86_64"
+      - name: Build the Linux amd64 image without starting it
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --platform linux/amd64 --pull --no-cache --progress plain \
+            --iidfile "$HOST_IMAGE_BUILD_ROOT/image-id" "$HOST_IMAGE_BUILD_ROOT/context"
+      - name: Check image architecture and record the build inputs
+        shell: bash
+        env:
+          HOST_BUILD_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+          HOST_BUILD_PR_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+        run: |
+          set -euo pipefail
+          docker image inspect "$(cat "$HOST_IMAGE_BUILD_ROOT/image-id")" \
+            > "$HOST_IMAGE_BUILD_ROOT/image-inspect.json"
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          root = Path(os.environ['HOST_IMAGE_BUILD_ROOT'])
+          context = root / 'context'
+          if sorted(path.name for path in context.iterdir()) != ['Dockerfile', 'echolocal_linux_x86_64']:
+              raise SystemExit('Build context contains unexpected files')
+          image, = json.loads((root / 'image-inspect.json').read_text())
+          image_id = (root / 'image-id').read_text().strip()
+          if image['Id'] != image_id or (image['Os'], image['Architecture']) != ('linux', 'amd64'):
+              raise SystemExit('Built image does not match the requested Linux amd64 target')
+          binary_sha = hashlib.sha256((context / 'echolocal_linux_x86_64').read_bytes()).hexdigest()
+          if binary_sha != os.environ['ECHOLOCAL_ASSET_SHA256']:
+              raise SystemExit('Build-context binary differs from the verified release')
+          dockerfile = (context / 'Dockerfile').read_bytes()
+          receipt = {
+              'schema_version': 1,
+              'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+              'event_commit': os.environ['GITHUB_SHA'],
+              'pull_request_head_sha': os.environ['HOST_BUILD_PR_HEAD_SHA'] or None,
+              'pull_request_base_sha': os.environ['HOST_BUILD_PR_BASE_SHA'] or None,
+              'event_name': os.environ['GITHUB_EVENT_NAME'],
+              'run_id': os.environ['GITHUB_RUN_ID'],
+              'run_attempt': os.environ['GITHUB_RUN_ATTEMPT'],
+              'platform': 'linux/amd64',
+              'image_id': image_id,
+              'image_size_bytes': image['Size'],
+              'dockerfile_sha256': hashlib.sha256(dockerfile).hexdigest(),
+              'base_image': dockerfile.decode().splitlines()[0].removeprefix('FROM '),
+              'echolocal_version': '0.0.8',
+              'echolocal_url': os.environ['ECHOLOCAL_ASSET_URL'],
+              'echolocal_sha256': binary_sha,
+              'scope': 'Image build and configuration inspection only; no container start, tool execution, device access or image publication.',
+              'limitations': 'APT packages are not version-pinned. This is buildability evidence, not bit-for-bit reproducibility or hardware acceptance.',
+          }
+          (root / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          print(json.dumps(receipt, indent=2))
+          PY
+      - name: Retain the host image build receipt
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: host-image-build-receipt
+          path: ${{ env.HOST_IMAGE_BUILD_ROOT }}/receipt.json
+          if-no-files-found: error
+          retention-days: 30
