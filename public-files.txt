@@ -102,6 +102,7 @@ VERSION
 .github/workflows/release-build.yml
 .github/workflows/codeql.yml
 .github/workflows/dependency-review.yml
+.github/workflows/host-image-build.yml
 scripts/package_host_tools.py
 scripts/test_package_host_tools.py
 third_party/venus-os-ci-toolkit-LICENSE
