@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.5] - Unreleased
+
+### Changed
+
+- Update the locked macOS ARM64 training environment to the matching httpcore2/httpx2 2.15.1 pair, filelock 4.2.4 and setuptools 84.2.1.
+- Group the paired HTTP dependencies so future updates preserve their compatible versions. Keep the Python 3.11 reference platform and existing TensorFlow, NumPy and model constraints.
+
+### Upgrade
+
+Unpack the verified public host-tools archive into a new directory and recreate the documented locked environment. Preserve operator configuration, local models and audio separately, and retain the previous immutable release for rollback. Firmware conversion, training and device deployment remain explicit operations.
+
+### Security
+
+Hash-verified dependency installation and artifact-download TLS checks remain required. This maintenance preview contains only the public source allowlist; it does not establish native TensorFlow, model, acoustic or hardware acceptance.
+
 ## [0.1.4] - 2026-10-20
 
 ### Changed
