@@ -4,7 +4,8 @@
 
 ### Changed
 
-- Update the locked macOS ARM64 training environment to the matching httpcore2/httpx2 2.15.1 pair, filelock 4.2.4 and setuptools 84.2.1.
+- Update Hugging Face Hub from 2.2.0 to 2.3.0 in the training requirements and the macOS ARM64 lock; update the locked certifi bundle from 2026.10.19 to 2026.10.23.
+- Retain the matching httpcore2/httpx2 2.16.0 pair, filelock 4.2.4 and setuptools 84.2.1 in the published macOS ARM64 lock.
 - Group the paired HTTP dependencies so future updates preserve their compatible versions. Keep the Python 3.11 reference platform and existing TensorFlow, NumPy and model constraints.
 
 ### Upgrade
