@@ -85,3 +85,18 @@ Then run the project commands above. Keep the source, plan and channel together;
 do not invent a release sequence or edit version fields by hand. Local packaging
 does not create a qualified release: the hosted pipeline still verifies the full
 build inventory, provenance and, for an RC, its own isolated fuzz report.
+
+## Release workflow retries
+
+Fresh release inputs are selected by the exact GitHub workflow run ID and run
+attempt. After a failed or partial run, choose **Re-run all jobs** so every
+required producer creates inputs for the same attempt. Retrying only failed jobs
+or an individual job intentionally fails when a complete current-attempt input
+set is missing.
+
+Artifacts from older attempts may remain available for diagnostics; they are not
+inputs to the new attempt and do not need to be deleted. Filtering artifact names
+alone does not prove package completeness or receipt identity. Complete package
+inventory and receipt identity checks remain separate release requirements.
+
+See the shared [package identity and retry contract](https://github.com/victron-venus/venus-os-ci-toolkit/blob/main/docs/VERSIONING.md#package-identity-across-reruns).
