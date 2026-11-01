@@ -43,7 +43,7 @@ if name == "sudo":
     os.execvp(args[0], args)
 if name == "timeout":
     assert args[:2] == ["--signal=TERM", "--kill-after=15s"], args
-    assert args[2] in {"180s", "360s"}, args
+    assert args[2] in {"180s", "900s"}, args
     os.execvp(args[3], args[3:])
 if name == "apt-get":
     operation = "update" if "update" in args else "install"
@@ -123,7 +123,7 @@ class PythonSystemDependencyTests(unittest.TestCase):
         ])
         self.assertEqual(self.calls("timeout"), [
             ["--signal=TERM", "--kill-after=15s", "180s", "apt-get"] + OPTIONS + ["update", "--error-on=any"],
-            ["--signal=TERM", "--kill-after=15s", "360s", "apt-get"] + OPTIONS + ["install", "--yes"] + PACKAGES,
+            ["--signal=TERM", "--kill-after=15s", "900s", "apt-get"] + OPTIONS + ["install", "--yes"] + PACKAGES,
         ])
         for path, content in fixtures.items():
             self.assertEqual(path.read_bytes(), content)
@@ -147,7 +147,10 @@ class PythonSystemDependencyTests(unittest.TestCase):
     def test_step_is_required_linux_only_and_fits_inside_job_deadline(self):
         self.assertEqual(STEP["if"], "runner.os == 'Linux'")
         self.assertEqual(STEP["shell"], "bash")
-        self.assertEqual(STEP["timeout-minutes"], "10")
+        self.assertEqual(STEP["timeout-minutes"], "20")
+        self.assertEqual(JOB["timeout-minutes"], "25")
+        # Both command deadlines and their TERM grace fit in the step budget.
+        self.assertLess(180 + 900 + 2 * 15, int(STEP["timeout-minutes"]) * 60)
         self.assertLess(int(STEP["timeout-minutes"]), int(JOB["timeout-minutes"]))
         self.assertNotIn("continue-on-error", STEP)
         self.assertFalse(any("mirror" in step.get("name", "").lower() for step in JOB["steps"]))
@@ -163,7 +166,7 @@ class PythonSystemDependencyTests(unittest.TestCase):
     @unittest.skipUnless(GNU_TIMEOUT, "GNU timeout is required for real deadline probes")
     def test_real_deadlines_stop_stalled_and_continuously_active_downloads(self):
         # Change only the durations to keep real process/signal checks fast.
-        script = STEP["run"].replace("180s", "0.4s").replace("360s", "0.4s").replace("15s", "0.2s")
+        script = STEP["run"].replace("180s", "0.4s").replace("900s", "0.4s").replace("15s", "0.2s")
         timeout_command = self.bin / "timeout"
         timeout_command.unlink()
         timeout_command.symlink_to(GNU_TIMEOUT)

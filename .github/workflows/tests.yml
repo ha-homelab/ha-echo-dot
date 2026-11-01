@@ -13,7 +13,7 @@ concurrency:
 jobs:
   python:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
@@ -36,7 +36,7 @@ jobs:
           python -m pip install --only-binary=:all: -r requirements-tls-test.txt -r requirements-lint.txt
       - name: Install system dependencies
         if: runner.os == 'Linux'
-        timeout-minutes: 10
+        timeout-minutes: 20
         shell: bash
         run: |
           # Keep the runner's provisioned mirrors and trust configuration unchanged.
@@ -67,7 +67,9 @@ jobs:
           }
           # Reject partial index updates instead of silently using stale indexes.
           run_apt 180s update --error-on=any
-          run_apt 360s install --yes ffmpeg
+          # FFmpeg pulls about 94 MB across 99 packages on a fresh hosted runner.
+          # Allow slow active transfers while retaining a finite install deadline.
+          run_apt 900s install --yes ffmpeg
       - name: Check all Python source diagnostics
         run: git ls-files -z -- '*.py' | xargs -0 python -m ruff check --isolated --select F --ignore-noqa --
       - name: Run synthetic host contracts without training or device access
