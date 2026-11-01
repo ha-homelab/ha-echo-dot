@@ -244,7 +244,11 @@ class PythonSystemDependencyTests(unittest.TestCase):
         self.assertEqual(self.calls("ldconfig"), [])
         self.assertEqual(self.calls("pkg-config"), [])
         self.assertIn("APT update failed with exit 100", result.stderr)
-        self.assertFalse(list(self.root.glob("host-apt.*")))
+        records = [row for row in map(json.loads, self.log.read_text().splitlines())
+                   if row["command"] == "configuration"]
+        self.assertEqual(len(records), 1)
+        for record in records:
+            self.assertFalse(Path(record["source"]).parent.exists())
 
     def test_failed_install_propagates_exit_status(self):
         result = self.execute(INSTALL_MODE="fail")
@@ -253,7 +257,11 @@ class PythonSystemDependencyTests(unittest.TestCase):
         self.assertEqual(self.calls("ldconfig"), [])
         self.assertEqual(self.calls("pkg-config"), [])
         self.assertIn("APT install failed with exit 100", result.stderr)
-        self.assertFalse(list(self.root.glob("host-apt.*")))
+        records = [row for row in map(json.loads, self.log.read_text().splitlines())
+                   if row["command"] == "configuration"]
+        self.assertEqual(len(records), 2)
+        for record in records:
+            self.assertFalse(Path(record["source"]).parent.exists())
 
     def test_step_is_required_linux_only_and_fits_inside_job_deadline(self):
         self.assertEqual(STEP["if"], "runner.os == 'Linux'")
