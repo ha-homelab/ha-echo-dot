@@ -170,7 +170,7 @@ class PythonSystemDependencyTests(unittest.TestCase):
         record = records[0]
         self.assertEqual(record["mirrors"].splitlines(), [
             "https://archive.ubuntu.com/ubuntu/\tpriority:1",
-            "https://security.ubuntu.com/ubuntu/\tpriority:2",
+            "https://mirrors.kernel.org/ubuntu/\tpriority:2",
         ])
         self.assertEqual(record["sources"].splitlines(), [
             "Types: deb", "URIs: mirror+file:" + str(Path(record["source"]).parent / "mirrors.txt"),
