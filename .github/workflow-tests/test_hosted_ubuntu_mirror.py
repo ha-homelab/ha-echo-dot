@@ -1,142 +1,187 @@
-"""Exercise the shipped toolkit mirror preparation against temporary files."""
+"""Exercise the shipped APT step without changing the host's packages or sources."""
+
 import json
 import os
-from pathlib import Path
+import shutil
 import subprocess
+import sys
 import tempfile
+import time
 import unittest
+from pathlib import Path
+
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+WORKFLOW = yaml.load(
+    (ROOT / ".github/workflows/tests.yml").read_text(), Loader=yaml.BaseLoader
+)
+JOB = WORKFLOW["jobs"]["python"]
+STEP = next(step for step in JOB["steps"] if step.get("name") == "Install system dependencies")
+OPTIONS = [
+    "-o", "Acquire::Retries=2",
+    "-o", "Acquire::http::Timeout=20",
+    "-o", "Acquire::https::Timeout=20",
+    "-o", "DPkg::Lock::Timeout=60",
+]
+PACKAGES = ["ffmpeg"]
+GNU_TIMEOUT = shutil.which("timeout") or shutil.which("gtimeout")
+
+FAKE_COMMAND = r'''
+import json
+import os
+import signal
+import sys
+import time
+from pathlib import Path
+
+name = Path(sys.argv[0]).name
+args = sys.argv[1:]
+with open(os.environ["COMMAND_LOG"], "a") as log:
+    log.write(json.dumps({"command": name, "args": args}) + "\n")
+if name == "sudo":
+    os.execvp(args[0], args)
+if name == "timeout":
+    assert args[:2] == ["--signal=TERM", "--kill-after=15s"], args
+    assert args[2] in {"180s", "360s"}, args
+    os.execvp(args[3], args[3:])
+if name == "apt-get":
+    operation = "update" if "update" in args else "install"
+    mode = os.environ.get(operation.upper() + "_MODE", "success")
+    if mode == "fail":
+        print("simulated APT error", file=sys.stderr)
+        sys.exit(100)
+    if mode == "stalled":
+        time.sleep(60)
+    if mode == "active-ignore-term":
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        while True:
+            print("simulated continuing download", flush=True)
+            time.sleep(0.02)
+'''
 
 
-class HostedUbuntuMirrorTests(unittest.TestCase):
-    WORKFLOW_NAME = "tests.yml"
-    STEP_NAME = "Prefer the provisioned Ubuntu archive fallback"
-    AZURE = "http://azure.archive.ubuntu.com/ubuntu/\tpriority:1\n"
-    FALLBACK = "https://archive.ubuntu.com/ubuntu/\tpriority:2\n"
-
+class PythonSystemDependencyTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
-        self.mirrors = self.root / "apt-mirrors.txt"
-        workflow = yaml.safe_load((ROOT / ".github/workflows" / self.WORKFLOW_NAME).read_text())
-        self.steps = workflow["jobs"]["python"]["steps"]
-        self.step = next(step for step in self.steps if step.get("name") == self.STEP_NAME)
-        # Execute the shipped Node body against a fixture; never write host APT files.
-        body = self.step["run"].split("<<'NODE'\n", 1)[1].removesuffix("NODE\n")
-        self.assertEqual(body.count("'/etc/apt/apt-mirrors.txt'"), 1)
-        self.body = body.replace("'/etc/apt/apt-mirrors.txt'", json.dumps(str(self.mirrors)))
+        self.bin = self.root / "bin"
+        self.bin.mkdir()
+        self.log = self.root / "commands.jsonl"
+        for command in ("sudo", "timeout", "apt-get", "ldconfig", "pkg-config"):
+            path = self.bin / command
+            path.write_text(f"#!{sys.executable}\n" + FAKE_COMMAND)
+            path.chmod(0o755)
+        self.env = os.environ | {
+            "PATH": f"{self.bin}:{os.environ['PATH']}",
+            "COMMAND_LOG": str(self.log),
+            "PKG_CONFIG_PATH": "",
+        }
 
-    def execute(self, **env):
+    def execute(self, script=None, **env):
         return subprocess.run(
-            ["node", "-e", self.body], cwd=self.root,
-            env=os.environ | {"RUNNER_ENVIRONMENT": "github-hosted", "RUNNER_OS": "Linux"} | env,
-            capture_output=True, text=True, check=False,
+            ["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", script or STEP["run"]],
+            cwd=self.root, env=self.env | env,
+            capture_output=True, text=True, timeout=8, check=False,
         )
 
-    def test_only_exact_azure_line_removed_and_other_bytes_and_mode_preserved(self):
-        others = ("# Mirrors provisioned by the runner image\n\n" + self.FALLBACK +
-                  "https://security.ubuntu.com/ubuntu/\tpriority:3\n" +
-                  "https://example.invalid/ubuntu/ priority:8 arch:amd64 type:deb # keep options\n")
-        original = "# Keep this header\n" + self.AZURE + others
-        expected = "# Keep this header\n" + others
-        self.mirrors.write_bytes(original.encode())
-        self.mirrors.chmod(0o640)
-        result = self.execute()
+    def calls(self, command):
+        return [row["args"] for row in map(json.loads, self.log.read_text().splitlines())
+                if row["command"] == command]
+
+    def test_success_preserves_packages_and_mirror_configuration(self):
+        sources = self.root / "etc/apt"
+        sources.mkdir(parents=True)
+        fixtures = {
+            sources / "apt-mirrors.txt": b"http://azure.archive.ubuntu.com/ubuntu/\tpriority:1\n"
+                                         b"https://archive.ubuntu.com/ubuntu/\tpriority:2\n",
+            sources / "sources.list": b"# operator-provisioned sources\n",
+            sources / "sources.list.d/ubuntu.sources": (
+                b"Types: deb\nURIs: mirror+file:/etc/apt/apt-mirrors.txt\n"
+                b"Suites: noble noble-updates noble-backports\nComponents: main universe\n"
+                b"Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n"
+            ),
+            sources / "sources.list.d/thirdparty.list": (
+                b"deb [signed-by=/usr/share/keyrings/example.gpg] https://example.org/packages stable main\n"
+            ),
+            sources / "apt.conf.d/99-trust": (
+                b'Acquire::AllowInsecureRepositories "false";\n'
+                b'APT::Get::AllowUnauthenticated "false";\n'
+                b'Acquire::https::Verify-Peer "true";\n'
+            ),
+        }
+        for path, content in fixtures.items():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(content)
+        # Redirect any future literal source access into the fixture tree.
+        result = self.execute(STEP["run"].replace("/etc/apt", str(sources)))
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(self.mirrors.read_bytes(), expected.encode())
-        self.assertEqual(self.mirrors.stat().st_mode & 0o777, 0o640)
-        result = self.execute()
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(self.mirrors.read_bytes(), expected.encode())
-        self.assertIn("leaving APT unchanged", result.stdout)
+        self.assertEqual(self.calls("apt-get"), [
+            OPTIONS + ["update", "--error-on=any"],
+            OPTIONS + ["install", "--yes"] + PACKAGES,
+        ])
+        self.assertEqual(self.calls("timeout"), [
+            ["--signal=TERM", "--kill-after=15s", "180s", "apt-get"] + OPTIONS + ["update", "--error-on=any"],
+            ["--signal=TERM", "--kill-after=15s", "360s", "apt-get"] + OPTIONS + ["install", "--yes"] + PACKAGES,
+        ])
+        for path, content in fixtures.items():
+            self.assertEqual(path.read_bytes(), content)
 
-    def test_whitespace_and_crlf_preserved(self):
-        azure = " \t" + self.AZURE.rstrip("\n") + "  \r\n"
-        fallback = "  " + self.FALLBACK.rstrip("\n") + " \r\n"
-        expected = "# untouched\r\n" + fallback + "# final comment without newline"
-        self.mirrors.write_bytes((azure + expected).encode())
-        result = self.execute()
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(self.mirrors.read_bytes(), expected.encode())
+    def test_failed_or_partial_index_refresh_stops_before_install(self):
+        result = self.execute(UPDATE_MODE="fail")
+        self.assertEqual(result.returncode, 100, result.stderr)
+        self.assertEqual(self.calls("apt-get"), [OPTIONS + ["update", "--error-on=any"]])
+        self.assertEqual(self.calls("ldconfig"), [])
+        self.assertEqual(self.calls("pkg-config"), [])
+        self.assertIn("APT update failed with exit 100", result.stderr)
 
-    def test_no_azure_and_lookalike_uris_are_untouched(self):
-        original = ("# " + self.AZURE + "http://azure.archive.ubuntu.com/ubuntu-other/ priority:1\n" +
-                    "http://azure.archive.ubuntu.com.example.invalid/ubuntu/ priority:1\n" +
-                    "https://azure.archive.ubuntu.com/ubuntu/ priority:1\n" + self.FALLBACK)
-        self.mirrors.write_bytes(original.encode())
-        result = self.execute()
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(self.mirrors.read_bytes(), original.encode())
+    def test_failed_install_propagates_exit_status(self):
+        result = self.execute(INSTALL_MODE="fail")
+        self.assertEqual(result.returncode, 100, result.stderr)
+        self.assertEqual(len(self.calls("apt-get")), 2)
+        self.assertEqual(self.calls("ldconfig"), [])
+        self.assertEqual(self.calls("pkg-config"), [])
+        self.assertIn("APT install failed with exit 100", result.stderr)
 
-    def test_unrecognized_source_shapes_warn_without_any_write(self):
-        for original in (
-            self.AZURE, self.AZURE + self.FALLBACK.replace("https:", "http:"),
-            self.AZURE + self.FALLBACK.replace("priority:2", "priority:1"),
-            self.AZURE.replace("priority:1", "priority:2") + self.FALLBACK,
-            self.AZURE + self.FALLBACK.replace("priority:2", "priority:2 arch:amd64"),
-            self.AZURE.replace("priority:1", "priority:1 arch:amd64") + self.FALLBACK,
-            self.AZURE * 2 + self.FALLBACK, self.AZURE + self.FALLBACK * 2,
-            self.AZURE.replace("priority:1", "priority:2") + self.FALLBACK.replace("priority:2", "priority:1"),
-            self.AZURE + self.FALLBACK.rstrip("\n") + " # official fallback\n",
-        ):
-            with self.subTest(original=original):
-                self.mirrors.write_bytes(original.encode())
-                result = self.execute()
-                self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertIn("::warning::Unrecognized Ubuntu mirror configuration; leaving APT unchanged",
-                              result.stdout)
-                self.assertEqual(self.mirrors.read_bytes(), original.encode())
+    def test_step_is_required_linux_only_and_fits_inside_job_deadline(self):
+        self.assertEqual(STEP["if"], "runner.os == 'Linux'")
+        self.assertEqual(STEP["shell"], "bash")
+        self.assertEqual(STEP["timeout-minutes"], "10")
+        self.assertLess(int(STEP["timeout-minutes"]), int(JOB["timeout-minutes"]))
+        self.assertNotIn("continue-on-error", STEP)
+        self.assertFalse(any("mirror" in step.get("name", "").lower() for step in JOB["steps"]))
+        self.assertNotIn("/etc/apt", STEP["run"])
+        self.assertNotIn("sources.list", STEP["run"])
+        dependencies = next(step for step in JOB["steps"] if step.get("name") == "Install bounded host-test dependencies")
+        self.assertEqual(dependencies["run"].splitlines(), [
+            "python -m pip install --require-hashes --only-binary=:all: -r requirements-host-tests.txt",
+            "python -m pip install --only-binary=:all: -r requirements-tls-test.txt -r requirements-lint.txt",
+        ])
+        self.assertLess(JOB["steps"].index(STEP), next(i for i, step in enumerate(JOB["steps"]) if step.get("name") == "Check all Python source diagnostics"))
 
-    def test_invalid_encoding_and_non_regular_files_fail_unchanged(self):
-        original = (self.AZURE + self.FALLBACK).encode() + b"\xff"
-        self.mirrors.write_bytes(original)
-        self.assertNotEqual(self.execute().returncode, 0)
-        self.assertEqual(self.mirrors.read_bytes(), original)
-        self.mirrors.unlink()
-        target = self.root / "target"
-        target.write_text(self.AZURE + self.FALLBACK)
-        self.mirrors.symlink_to(target)
-        self.assertNotEqual(self.execute().returncode, 0)
-        self.assertTrue(self.mirrors.is_symlink())
-        self.assertEqual(target.read_text(), self.AZURE + self.FALLBACK)
-        self.mirrors.unlink()
-        self.mirrors.mkdir()
-        self.assertNotEqual(self.execute().returncode, 0)
-        self.assertTrue(self.mirrors.is_dir())
-
-    def test_missing_image_mirror_list_is_an_explicit_noop(self):
-        result = self.execute()
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("No image-provisioned Ubuntu mirror list", result.stdout)
-        self.assertFalse(self.mirrors.exists())
-
-    def test_self_hosted_and_non_linux_do_not_access_mirror_list(self):
-        # A directory would fail if the guarded body attempted to inspect it.
-        self.mirrors.mkdir()
-        for environment, operating_system in (
-            ("self-hosted", "Linux"), ("github-hosted", "Windows"),
-            ("github-hosted", "macOS"), ("", "Linux"), ("github-hosted", ""),
-        ):
-            with self.subTest(environment=environment, operating_system=operating_system):
-                result = self.execute(RUNNER_ENVIRONMENT=environment, RUNNER_OS=operating_system)
-                self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertIn("does not apply", result.stdout)
-                self.assertTrue(self.mirrors.is_dir())
-
-    def test_preparation_precedes_installs_and_preserves_the_timeout(self):
-        workflow = yaml.safe_load((ROOT / ".github/workflows" / self.WORKFLOW_NAME).read_text())
-        job = workflow["jobs"]["python"]
-        self.assertEqual(job["timeout-minutes"], 15)
-        self.assertEqual(self.step["if"], "runner.environment == 'github-hosted' && runner.os == 'Linux'")
-        names = [step.get("name") for step in self.steps]
-        self.assertLess(names.index(self.STEP_NAME), names.index("Install bounded host-test dependencies"))
-        dependencies = next(step for step in self.steps if step.get("name") == "Install bounded host-test dependencies")
-        self.assertIn("python -m pip install --require-hashes --only-binary=:all: -r requirements-host-tests.txt", dependencies["run"])
-        self.assertIn("sudo apt-get install --yes ffmpeg", dependencies["run"])
-        self.assertTrue(any(step.get("name") == "Run synthetic host contracts without training or device access" for step in self.steps))
+    @unittest.skipUnless(GNU_TIMEOUT, "GNU timeout is required for real deadline probes")
+    def test_real_deadlines_stop_stalled_and_continuously_active_downloads(self):
+        # Change only the durations to keep real process/signal checks fast.
+        script = STEP["run"].replace("180s", "0.4s").replace("360s", "0.4s").replace("15s", "0.2s")
+        timeout_command = self.bin / "timeout"
+        timeout_command.unlink()
+        timeout_command.symlink_to(GNU_TIMEOUT)
+        for operation in ("update", "install"):
+            for mode, status, diagnostic in (
+                ("stalled", 124, "exceeded its 0.4s deadline"),
+                ("active-ignore-term", 137, "was killed"),
+            ):
+                with self.subTest(operation=operation, mode=mode):
+                    self.log.unlink(missing_ok=True)
+                    started = time.monotonic()
+                    result = self.execute(script, **{operation.upper() + "_MODE": mode})
+                    self.assertEqual(result.returncode, status, result.stderr)
+                    self.assertLess(time.monotonic() - started, 4)
+                    self.assertIn(f"APT {operation} {diagnostic}", result.stderr)
+                    self.assertEqual(len(self.calls("apt-get")), 1 if operation == "update" else 2)
+                    self.assertEqual(self.calls("ldconfig"), [])
+                    self.assertEqual(self.calls("pkg-config"), [])
 
 
 if __name__ == "__main__":
