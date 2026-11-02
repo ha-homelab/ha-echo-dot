@@ -5,6 +5,16 @@ updates:
     schedule:
       interval: daily
 
+  # Keep the original root graph fresh. Training has its own resolver below;
+  # including it here would retain a second, independently versioned snapshot.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    exclude-paths:
+      - training/**
+
   - package-ecosystem: pip
     directory: /training
     schedule:
