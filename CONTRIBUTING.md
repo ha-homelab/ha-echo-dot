@@ -58,6 +58,20 @@ uv pip compile requirements-host-tests.in --generate-hashes --universal --python
 Run the documented tests in a fresh virtual environment after updating a lock.
 The host-test environment uses Python 3.11 and `python -m pip install --require-hashes --only-binary=:all: -r requirements-host-tests.txt`.
 
+### Dependency graph ownership
+
+Dependabot scans root Python manifests and `training/` separately. The root
+entry excludes `training/**`, so the same training lock is not retained in two
+independent dependency snapshots. Root version-update PRs are disabled; security
+updates and graph refreshes remain enabled. The training resolver keeps its
+existing compatibility limits.
+
+When changing scanner directories, inspect the successful managed graph payloads
+and their `detector.name`/`job.correlator`. A former root snapshot can retain old
+training versions even after the training-only scan succeeds. Refresh the original
+root scan with its current scope, then verify both the exported SBOM and open
+Dependabot alerts. Do not dismiss an alert solely because a newer lock was merged.
+
 Contributions to original project code and documentation are made under the [MIT license](LICENSE). Preserve upstream copyright, license and NOTICE files for third-party material.
 
 
