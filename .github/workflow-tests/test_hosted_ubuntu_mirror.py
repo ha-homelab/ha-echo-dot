@@ -286,7 +286,7 @@ class PythonSystemDependencyTests(unittest.TestCase):
         dependencies = next(step for step in JOB["steps"] if step.get("name") == "Install bounded host-test dependencies")
         self.assertEqual(dependencies["run"].splitlines(), [
             "python -m pip install --require-hashes --only-binary=:all: -r requirements-host-tests.txt",
-            "python -m pip install --only-binary=:all: -r requirements-tls-test.txt -r requirements-lint.txt",
+            "python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-host-tools.txt",
         ])
         self.assertLess(JOB["steps"].index(STEP), next(i for i, step in enumerate(JOB["steps"]) if step.get("name") == "Check all Python source diagnostics"))
 
