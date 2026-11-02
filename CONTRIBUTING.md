@@ -29,6 +29,21 @@ python3 -m unittest discover -s training/recorder -v
 Fast tests use synthetic data; NumPy 1.26.4 exercises numerical fixtures and ffmpeg is required for recorder tests. Full model training, TensorFlow dependency tests and acoustic acceptance use the separately documented Python 3.11 environment. These are not implied by passing host tests.
 
 The [CI workflow](.github/workflows/tests.yml) is the authoritative list of required jobs.
+
+CI installs TLS fixture tools and the linter from
+[the complete host-tools lock](.github/requirements-host-tools.txt), including
+transitive dependencies and artifact hashes. The existing `requirements-tls-test.txt`
+and `requirements-lint.txt` remain the editable inputs. After changing an input,
+regenerate the lock with the same uv version as CI (currently 0.13.4):
+
+```sh
+uv pip compile requirements-tls-test.txt requirements-lint.txt --python-version 3.11 --universal --generate-hashes --no-annotate --only-binary=:all: --output-file .github/requirements-host-tools.txt
+```
+
+The host workflow checks regeneration with the locked versions before installing
+with `--require-hashes --only-binary=:all:`. This tools environment is separate from
+the Python 3.11 model-training environment.
+
 Use isolated test data and temporary outputs. Never run a device write, unlock,
 deployment or publication command merely to validate a documentation change.
 

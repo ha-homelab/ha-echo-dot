@@ -20,6 +20,7 @@ class DependencyGraphScopesTests(unittest.TestCase):
             "requirements-strict-tls.txt",
             "requirements-tls-test.txt",
             ".github/requirements-workflow-contracts.txt",
+            ".github/requirements-host-tools.txt",
             "training/requirements.txt",
             "training/requirements-macos-arm64.lock.txt",
         ]

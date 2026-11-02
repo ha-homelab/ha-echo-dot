@@ -30,10 +30,19 @@ jobs:
           enable-cache: false
       - name: Resolve the complete reference training lock without installation
         run: python training/check_reference_lock.py
+      - name: Verify the complete host-tools lock
+        run: |
+          cp .github/requirements-host-tools.txt "$RUNNER_TEMP/requirements-host-tools.txt"
+          uv pip compile requirements-tls-test.txt requirements-lint.txt \
+            --python-version 3.11 --universal --generate-hashes --no-annotate --only-binary=:all: \
+            --constraint .github/requirements-host-tools.txt \
+            --custom-compile-command 'uv pip compile requirements-tls-test.txt requirements-lint.txt --python-version 3.11 --universal --generate-hashes --no-annotate --only-binary=:all: --output-file .github/requirements-host-tools.txt' \
+            --output-file "$RUNNER_TEMP/requirements-host-tools.txt" --quiet
+          cmp .github/requirements-host-tools.txt "$RUNNER_TEMP/requirements-host-tools.txt"
       - name: Install bounded host-test dependencies
         run: |
           python -m pip install --require-hashes --only-binary=:all: -r requirements-host-tests.txt
-          python -m pip install --only-binary=:all: -r requirements-tls-test.txt -r requirements-lint.txt
+          python -m pip install --require-hashes --only-binary=:all: -r .github/requirements-host-tools.txt
       - name: Install system dependencies
         if: runner.os == 'Linux'
         timeout-minutes: 20
