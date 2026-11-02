@@ -32,6 +32,7 @@ jobs:
         run: python training/check_reference_lock.py
       - name: Verify the complete host-tools lock
         run: |
+          cp .github/requirements-host-tools.txt "$RUNNER_TEMP/requirements-host-tools.txt"
           uv pip compile requirements-tls-test.txt requirements-lint.txt \
             --python-version 3.11 --universal --generate-hashes --no-annotate --only-binary=:all: \
             --constraint .github/requirements-host-tools.txt \
