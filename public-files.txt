@@ -113,6 +113,8 @@ third_party/venus-os-ci-toolkit-LICENSE
 .github/release-tests/test_prepare_version.py
 .github/release-tests/test_release_client_consumer.py
 .github/release-tests/test_release_control.py
+.github/release-tests/test_release_read_safety.py
+.github/release-tests/test_release_response_framing.py
 .github/release-tests/test_release_notes.py
 .github/release-tests/test_release_state.py
 .github/release-tests/test_release_validation.py
@@ -128,6 +130,7 @@ RELEASING.md
 docs/VERSIONING.md
 docs/rc-fuzzing.md
 docs/release-workflow.md
+docs/release-read-safety.md
 docs/runner-preflight.md
 scripts/change_scope.py
 scripts/prepare_version.py
