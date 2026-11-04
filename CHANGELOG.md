@@ -1,6 +1,21 @@
 # Changelog
 
-## [0.1.5] - Unreleased
+## [0.1.6] - Unreleased
+
+### Changed
+
+- Update the published macOS ARM64 training lock from filelock 4.2.4 to 4.2.7, grpcio 1.85.0 to 1.85.1, and hf-xet 1.7.1 to 1.8.0. Preserve the Python 3.11 reference platform and existing TensorFlow, NumPy and model constraints.
+- Harden the packaged release client with bounded read retries, strict partial-response handling and validation that successful jobs belong to the current release attempt. Retain the dedicated regression tests and regeneration instructions.
+
+### Upgrade
+
+Unpack the verified public host-tools archive into a new directory and recreate the documented locked environment. Preserve operator configuration, local models and audio separately. Keep the previous immutable release available for rollback; firmware conversion, training and device deployment remain explicit operations.
+
+### Security
+
+Verify the archive checksum and retain hash-checked dependency installation and artifact-download TLS verification. This source release contains only the public allowlist; it does not establish TensorFlow training, model parity, acoustic or hardware acceptance.
+
+## [0.1.5] - 2026-11-02
 
 ### Changed
 
