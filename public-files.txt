@@ -108,6 +108,7 @@ scripts/test_package_host_tools.py
 third_party/venus-os-ci-toolkit-LICENSE
 .github/release-tests/test_asset_streaming.py
 .github/release-tests/test_change_scope.py
+.github/release-tests/test_checkout_release_notes.py
 .github/release-tests/test_cli_version_paths.py
 .github/release-tests/test_consumer_versioning.py
 .github/release-tests/test_prepare_version.py
