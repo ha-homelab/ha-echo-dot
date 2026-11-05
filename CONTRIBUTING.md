@@ -37,7 +37,7 @@ and `requirements-lint.txt` remain the editable inputs. After changing an input,
 regenerate the lock with the same uv version as CI (currently 0.13.4):
 
 ```sh
-uv pip compile requirements-tls-test.txt requirements-lint.txt --python-version 3.11 --universal --generate-hashes --no-annotate --only-binary=:all: --output-file .github/requirements-host-tools.txt
+uv pip compile requirements-tls-test.txt requirements-lint.txt .github/requirements-wheels-only.in --python-version=3.11 --universal --generate-hashes --output-file=.github/requirements-host-tools.txt
 ```
 
 The host workflow checks regeneration with the locked versions before installing

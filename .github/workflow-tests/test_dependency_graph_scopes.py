@@ -2,6 +2,7 @@
 import fnmatch
 import json
 import re
+import shlex
 import unittest
 from pathlib import Path
 
@@ -29,6 +30,14 @@ class DependencyGraphScopesTests(unittest.TestCase):
             "training/requirements.txt",
             "training/requirements-macos-arm64.lock.txt",
         ]
+        compiled_inputs = set()
+        for output in ("requirements-host-tests.txt", ".github/requirements-host-tools.txt"):
+            for line in (ROOT / output).read_text().splitlines()[:8]:
+                if line.startswith("#") and "uv pip compile " in line:
+                    tokens = shlex.split(line.lstrip("# "))[3:]
+                    compiled_inputs.update(token for token in tokens
+                                           if not token.startswith("-") and token.endswith((".in", ".txt"))
+                                           and token != output)
         for path in paths:
             owners = []
             if any(matches(path, pattern) for pattern in self.config["ignorePaths"]):
@@ -38,13 +47,14 @@ class DependencyGraphScopesTests(unittest.TestCase):
                     config = self.config.get(manager, {})
                     if any(matches(path, pattern) for pattern in config.get("ignorePaths", [])):
                         continue
-                    if any(matches(path, pattern) for pattern in config.get("managerFilePatterns", [])):
+                    if (manager == "pip-compile" and path in compiled_inputs) or any(
+                        matches(path, pattern) for pattern in config.get("managerFilePatterns", [])
+                    ):
                         owners.append(manager)
             expected = "pip_requirements"
-            if path == "requirements-host-tests.txt":
+            if path in ("requirements-host-tests.txt", ".github/requirements-host-tools.txt",
+                        "requirements-lint.txt", "requirements-tls-test.txt"):
                 expected = "pip-compile"
-            elif path == ".github/requirements-host-tools.txt":
-                expected = "source-workflow"
             with self.subTest(path=path):
                 self.assertEqual(owners, [expected])
 

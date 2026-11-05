@@ -9,3 +9,5 @@ Renovate is the dependency-update path; Dependabot update PRs are disabled. The 
 If an update fails, compare all CodeQL step references and, where present, the reusable fuzz workflow SHA, its `toolkit-ref` input and `.release-policy.json` `fuzzing.toolkit_ref`. They must agree within their respective groups.
 
 Keep the version comment on every SHA-pinned action (`# vX.Y.Z`) and the `# main` comment on toolkit workflow references. Renovate uses these comments as version metadata; removing them can make a dependency ineligible for updates even though the workflow still executes. Verify the upstream tag-to-SHA mapping before restoring a missing version comment.
+
+The host-tools inputs `requirements-lint.txt` and `requirements-tls-test.txt` are refreshed with `.github/requirements-host-tools.txt` by the native pip-compile manager. The scoped `.github/requirements-wheels-only.in` input preserves binary-only resolution; [CONTRIBUTING.md](../CONTRIBUTING.md) records the same regeneration command.
