@@ -53,7 +53,7 @@ class DependencyGraphScopesTests(unittest.TestCase):
         self.assertEqual(len(roots), 1)
         root = roots[0]
         self.assertTrue(self.config["dependencyDashboard"])
-        self.assertIn("**", root["matchFileNames"])
+        self.assertIn("**/*", root["matchFileNames"])
         self.assertIn("!training/**", root["matchFileNames"])
         self.assertIn("pip_requirements", root["matchManagers"])
         self.assertIn("pip-compile", root["matchManagers"])

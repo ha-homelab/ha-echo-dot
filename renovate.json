@@ -38,7 +38,7 @@
         "pip-compile"
       ],
       "matchFileNames": [
-        "**",
+        "**/*",
         "!training/**"
       ],
       "schedule": [
