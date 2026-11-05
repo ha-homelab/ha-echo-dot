@@ -1,19 +1,24 @@
-"""Keep managed dependency snapshots complete without overlapping training."""
+"""Keep dependency update paths complete without competing lock writers."""
 import fnmatch
+import json
+import re
 import unittest
 from pathlib import Path
-
-import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def matches(path, pattern):
+    if pattern.startswith("/") and pattern.endswith("/"):
+        return re.search(pattern[1:-1], path) is not None
+    return fnmatch.fnmatchcase(path, pattern)
+
+
 class DependencyGraphScopesTests(unittest.TestCase):
     def setUp(self):
-        config = yaml.safe_load((ROOT / ".github/dependabot.yml").read_text())
-        self.pip = [row for row in config["updates"] if row["package-ecosystem"] == "pip"]
+        self.config = json.loads((ROOT / "renovate.json").read_text())
 
-    def test_each_python_manifest_has_one_graph_owner(self):
+    def test_each_python_manifest_has_one_update_path(self):
         paths = [
             "requirements-host-tests.txt",
             "requirements-lint.txt",
@@ -26,27 +31,34 @@ class DependencyGraphScopesTests(unittest.TestCase):
         ]
         for path in paths:
             owners = []
-            for row in self.pip:
-                prefix = row["directory"].strip("/")
-                if prefix and not path.startswith(prefix + "/"):
-                    continue
-                relative = path[len(prefix) + 1:] if prefix else path
-                if any(fnmatch.fnmatchcase(relative, pattern) for pattern in row.get("exclude-paths", [])):
-                    continue
-                owners.append(row["directory"])
+            if any(matches(path, pattern) for pattern in self.config["ignorePaths"]):
+                owners.append("source-workflow")
+            else:
+                for manager in ("pip_requirements", "pip-compile"):
+                    config = self.config.get(manager, {})
+                    if any(matches(path, pattern) for pattern in config.get("ignorePaths", [])):
+                        continue
+                    if any(matches(path, pattern) for pattern in config.get("managerFilePatterns", [])):
+                        owners.append(manager)
+            expected = "pip_requirements"
+            if path == "requirements-host-tests.txt":
+                expected = "pip-compile"
+            elif path == ".github/requirements-host-tools.txt":
+                expected = "source-workflow"
             with self.subTest(path=path):
-                self.assertEqual(owners, ["/training" if path.startswith("training/") else "/"])
+                self.assertEqual(owners, [expected])
 
-    def test_root_disables_version_prs_without_suppressing_security_updates(self):
-        roots = [row for row in self.pip if row["directory"] == "/"]
+    def test_root_requires_approval_without_suppressing_training_or_security(self):
+        roots = [row for row in self.config["packageRules"] if row.get("dependencyDashboardApproval")]
         self.assertEqual(len(roots), 1)
         root = roots[0]
-        self.assertEqual(root["open-pull-requests-limit"], 0)
-        self.assertNotIn("ignore", root)
-        self.assertNotIn("target-branch", root)
-        training = [row for row in self.pip if row["directory"] == "/training"]
-        self.assertEqual(len(training), 1)
-        self.assertGreater(training[0].get("open-pull-requests-limit", 5), 0)
+        self.assertTrue(self.config["dependencyDashboard"])
+        self.assertIn("**", root["matchFileNames"])
+        self.assertIn("!training/**", root["matchFileNames"])
+        self.assertIn("pip_requirements", root["matchManagers"])
+        self.assertIn("pip-compile", root["matchManagers"])
+        self.assertNotEqual(self.config.get("vulnerabilityAlerts", {}).get("enabled"), False)
+        self.assertIn("local>victron-venus/venus-os-ci-toolkit:renovate-fleet", self.config["extends"])
 
 
 if __name__ == "__main__":
