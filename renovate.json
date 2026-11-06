@@ -1,6 +1,256 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "local>victron-venus/venus-os-ci-toolkit:renovate-ci"
-  ]
+    "local>victron-venus/venus-os-ci-toolkit:renovate-fleet"
+  ],
+  "enabledManagers": [
+    "github-actions",
+    "custom.regex",
+    "custom.jsonata",
+    "dockerfile",
+    "gomod",
+    "pip-compile",
+    "pip_requirements"
+  ],
+  "ignorePaths": [
+    "**/vendor/**",
+    "**/node_modules/**",
+    "**/fixtures/**",
+    "**/tools/browser-compatibility/**",
+    ".github/cosign/**"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "matchFileNames": [
+        "/^host/synology/[^/]+$/"
+      ],
+      "schedule": [
+        "at any time"
+      ]
+    },
+    {
+      "matchManagers": [
+        "pip_requirements",
+        "pip-compile"
+      ],
+      "matchFileNames": [
+        "**/*",
+        "!training/**"
+      ],
+      "schedule": [
+        "* * * * 1"
+      ],
+      "dependencyDashboardApproval": true,
+      "description": "Routine updates retain manual approval; security fixes bypass dashboard approval through the fleet policy."
+    },
+    {
+      "matchManagers": [
+        "pip_requirements",
+        "pip-compile"
+      ],
+      "matchFileNames": [
+        "/^training/[^/]+$/"
+      ],
+      "schedule": [
+        "at any time"
+      ]
+    },
+    {
+      "matchManagers": [
+        "pip_requirements",
+        "pip-compile"
+      ],
+      "matchFileNames": [
+        "/^training/[^/]+$/"
+      ],
+      "matchPackageNames": [
+        "onnxruntime"
+      ],
+      "allowedVersions": "<1.31"
+    },
+    {
+      "matchManagers": [
+        "pip_requirements",
+        "pip-compile"
+      ],
+      "matchFileNames": [
+        "/^training/[^/]+$/"
+      ],
+      "matchPackageNames": [
+        "tensorflow"
+      ],
+      "allowedVersions": "<2.19"
+    },
+    {
+      "matchManagers": [
+        "pip_requirements",
+        "pip-compile"
+      ],
+      "matchFileNames": [
+        "/^training/[^/]+$/"
+      ],
+      "matchPackageNames": [
+        "tf-keras"
+      ],
+      "allowedVersions": "<2.19"
+    },
+    {
+      "matchManagers": [
+        "pip_requirements",
+        "pip-compile"
+      ],
+      "matchFileNames": [
+        "/^training/[^/]+$/"
+      ],
+      "matchPackageNames": [
+        "numpy"
+      ],
+      "allowedVersions": "<2"
+    },
+    {
+      "matchManagers": [
+        "pip_requirements",
+        "pip-compile"
+      ],
+      "matchFileNames": [
+        "/^training/[^/]+$/"
+      ],
+      "matchPackageNames": [
+        "ml-dtypes"
+      ],
+      "allowedVersions": "<0.6"
+    },
+    {
+      "matchManagers": [
+        "pip_requirements",
+        "pip-compile"
+      ],
+      "matchFileNames": [
+        "/^training/[^/]+$/"
+      ],
+      "matchPackageNames": [
+        "protobuf"
+      ],
+      "allowedVersions": "<6"
+    },
+    {
+      "matchManagers": [
+        "pip_requirements",
+        "pip-compile"
+      ],
+      "matchFileNames": [
+        "/^training/[^/]+$/"
+      ],
+      "matchPackageNames": [
+        "tensorboard"
+      ],
+      "allowedVersions": "<2.19"
+    },
+    {
+      "matchManagers": [
+        "pip_requirements",
+        "pip-compile"
+      ],
+      "matchFileNames": [
+        "/^training/[^/]+$/"
+      ],
+      "matchPackageNames": [
+        "scipy"
+      ],
+      "allowedVersions": "<1.18"
+    },
+    {
+      "matchManagers": [
+        "pip_requirements",
+        "pip-compile"
+      ],
+      "matchFileNames": [
+        "/^training/[^/]+$/"
+      ],
+      "matchPackageNames": [
+        "httpcore2",
+        "httpx2"
+      ],
+      "groupName": "httpx-runtime",
+      "groupSlug": "httpx-runtime"
+    },
+    {
+      "matchManagers": [
+        "pip_requirements",
+        "pip-compile"
+      ],
+      "matchFileNames": [
+        "/^training/[^/]+$/"
+      ],
+      "matchPackageNames": [
+        "tensorflow",
+        "tensorflow-metal",
+        "tf-keras",
+        "tensorboard",
+        "ml-dtypes",
+        "protobuf",
+        "numpy",
+        "h5py",
+        "keras"
+      ],
+      "groupName": "tensorflow-runtime",
+      "groupSlug": "tensorflow-runtime"
+    },
+    {
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchFileNames": [
+        "/^training/validation/[^/]+$/"
+      ],
+      "schedule": [
+        "at any time"
+      ]
+    },
+    {
+      "description": "Regenerate compiled locks with their recorded source command; avoid independent edits to inputs or output snapshots.",
+      "matchManagers": [
+        "pip_requirements"
+      ],
+      "matchFileNames": [
+        "--output-file=.github/requirements-host-tools.txt",
+        ".github/requirements-host-tools.txt",
+        ".github/requirements-wheels-only.in",
+        "requirements-host-tests.in",
+        "requirements-host-tests.txt",
+        "requirements-lint.txt",
+        "requirements-tls-test.txt"
+      ],
+      "enabled": false
+    }
+  ],
+  "pip_requirements": {
+    "managerFilePatterns": [
+      "/(^|/)([^/]*[-_])?requirements[^/]*\\.(txt|pip)$/"
+    ],
+    "ignorePaths": [
+      "**/vendor/**",
+      "**/node_modules/**",
+      "**/fixtures/**",
+      "**/tools/browser-compatibility/**",
+      ".github/cosign/**",
+      "--output-file=.github/requirements-host-tools.txt",
+      ".github/requirements-host-tools.txt",
+      ".github/requirements-wheels-only.in",
+      "requirements-host-tests.in",
+      "requirements-host-tests.txt",
+      "requirements-lint.txt",
+      "requirements-tls-test.txt"
+    ]
+  },
+  "pip-compile": {
+    "managerFilePatterns": [
+      "/^\\.github/requirements\\-host\\-tools\\.txt$/",
+      "/^requirements\\-host\\-tests\\.txt$/"
+    ]
+  },
+  "dependencyDashboard": true
 }

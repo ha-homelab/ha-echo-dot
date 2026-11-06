@@ -37,7 +37,7 @@ and `requirements-lint.txt` remain the editable inputs. After changing an input,
 regenerate the lock with the same uv version as CI (currently 0.13.4):
 
 ```sh
-uv pip compile requirements-tls-test.txt requirements-lint.txt --python-version 3.11 --universal --generate-hashes --no-annotate --only-binary=:all: --output-file .github/requirements-host-tools.txt
+uv pip compile requirements-tls-test.txt requirements-lint.txt .github/requirements-wheels-only.in --python-version=3.11 --universal --generate-hashes --output-file=.github/requirements-host-tools.txt
 ```
 
 The host workflow checks regeneration with the locked versions before installing
@@ -67,7 +67,7 @@ platforms. Install with `--require-hashes`; do not remove this check to work aro
 a missing archive. Review dependency updates and regenerate the locks with:
 
 ```sh
-uv pip compile requirements-host-tests.in --generate-hashes --universal --python-version 3.11 --output-file requirements-host-tests.txt
+uv pip compile requirements-host-tests.in --generate-hashes --universal --python-version=3.11 --output-file=requirements-host-tests.txt
 ```
 
 Run the documented tests in a fresh virtual environment after updating a lock.
@@ -75,17 +75,19 @@ The host-test environment uses Python 3.11 and `python -m pip install --require-
 
 ### Dependency graph ownership
 
-Dependabot scans root Python manifests and `training/` separately. The root
-entry excludes `training/**`, so the same training lock is not retained in two
-independent dependency snapshots. Root version-update PRs are disabled; security
-updates and graph refreshes remain enabled. The training resolver keeps its
-existing compatibility limits.
+Renovate owns root Python inputs and `training/` through separate rules in
+`renovate.json`. Routine root updates require Dependency Dashboard approval;
+security fixes bypass that approval gate. Training updates retain their existing
+compatibility bounds and schedule. The native pip-compile manager updates each
+compiled lock together with its editable inputs.
 
-When changing scanner directories, inspect the successful managed graph payloads
-and their `detector.name`/`job.correlator`. A former root snapshot can retain old
-training versions even after the training-only scan succeeds. Refresh the original
-root scan with its current scope, then verify both the exported SBOM and open
-Dependabot alerts. Do not dismiss an alert solely because a newer lock was merged.
+Keep GitHub's dependency graph and vulnerability alerts enabled. When changing
+scanner directories, inspect the successful managed graph payloads and their
+`detector.name`/`job.correlator`: an old root snapshot can retain stale training
+versions. Verify both the exported SBOM and open dependency alerts after the
+updated snapshot arrives. Do not dismiss an alert solely because a newer lock
+was merged. Follow the [dependency-update activation procedure](docs/ci-dependency-updates.md)
+before declaring the old Dependabot PR producer disabled.
 
 Contributions to original project code and documentation are made under the [MIT license](LICENSE). Preserve upstream copyright, license and NOTICE files for third-party material.
 

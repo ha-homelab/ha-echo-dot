@@ -177,3 +177,6 @@ requirements-strict-tls.txt
 requirements-tls-test.txt
 docs/strict-training-tls.md
 requirements-lint.txt
+renovate.json
+.github/requirements-wheels-only.in
+.github/requirements-host-tools.txt

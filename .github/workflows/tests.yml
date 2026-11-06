@@ -33,12 +33,24 @@ jobs:
       - name: Verify the complete host-tools lock
         run: |
           cp .github/requirements-host-tools.txt "$RUNNER_TEMP/requirements-host-tools.txt"
-          uv pip compile requirements-tls-test.txt requirements-lint.txt \
-            --python-version 3.11 --universal --generate-hashes --no-annotate --only-binary=:all: \
+          uv pip compile requirements-tls-test.txt requirements-lint.txt .github/requirements-wheels-only.in \
+            --python-version=3.11 --universal --generate-hashes --no-annotate \
             --constraint .github/requirements-host-tools.txt \
-            --custom-compile-command 'uv pip compile requirements-tls-test.txt requirements-lint.txt --python-version 3.11 --universal --generate-hashes --no-annotate --only-binary=:all: --output-file .github/requirements-host-tools.txt' \
+            --custom-compile-command 'uv pip compile requirements-tls-test.txt requirements-lint.txt .github/requirements-wheels-only.in --python-version=3.11 --universal --generate-hashes --output-file=.github/requirements-host-tools.txt' \
             --output-file "$RUNNER_TEMP/requirements-host-tools.txt" --quiet
-          cmp .github/requirements-host-tools.txt "$RUNNER_TEMP/requirements-host-tools.txt"
+          python - <<'PYCODE'
+          import os
+          from pathlib import Path
+
+          def package_lines(path):
+              return [line for line in Path(path).read_text().splitlines()
+                      if line.strip() and not line.lstrip().startswith("#")]
+
+          expected = package_lines(".github/requirements-host-tools.txt")
+          actual = package_lines(Path(os.environ["RUNNER_TEMP"]) / "requirements-host-tools.txt")
+          if actual != expected:
+              raise SystemExit("Host-tools package pins or hashes are stale")
+          PYCODE
       - name: Install bounded host-test dependencies
         run: |
           python -m pip install --require-hashes --only-binary=:all: -r requirements-host-tests.txt

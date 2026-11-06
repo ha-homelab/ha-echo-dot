@@ -32,7 +32,7 @@ jobs:
         (github.event.pull_request.head.repo.full_name != github.repository ||
          github.event.pull_request.user.login == 'dependabot[bot]'))) &&
       contains(fromJSON('["4alvit","californiantiramisu","dependabot[bot]","renovate[bot]"]'), github.event.pull_request.user.login)
-    uses: victron-venus/venus-os-ci-toolkit/.github/workflows/auto-merge.yml@3bb4cd3a5172dcb73330fc2fd23a62eff22fae1a
+    uses: victron-venus/venus-os-ci-toolkit/.github/workflows/auto-merge.yml@3bb4cd3a5172dcb73330fc2fd23a62eff22fae1a # main
     with:
       reviewed-merge: true
       required-status-checks: CI gate
@@ -52,7 +52,7 @@ jobs:
       github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
       ((github.event.action == 'unlabeled' && github.event.label.name == 'automerge') || github.event.action == 'converted_to_draft' || (github.event.action == 'edited' && github.event.changes.base && github.event.pull_request.base.ref != github.event.repository.default_branch)) &&
       contains(fromJSON('["4alvit","californiantiramisu","dependabot[bot]","renovate[bot]"]'), github.event.pull_request.user.login)
-    uses: victron-venus/venus-os-ci-toolkit/.github/workflows/auto-merge.yml@9c1031ef160a696354e65b31c966de61b10775a3
+    uses: victron-venus/venus-os-ci-toolkit/.github/workflows/auto-merge.yml@9c1031ef160a696354e65b31c966de61b10775a3 # main
     with:
       withdrawal-only: true
     secrets:
