@@ -1,2 +1,2 @@
 # Synthetic TLS fixtures for qualified Linux/Apple silicon test hosts.
-cryptography==50.0.1
+cryptography==50.0.2
