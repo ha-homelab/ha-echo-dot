@@ -58,10 +58,11 @@ class DependencyGraphScopesTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertEqual(owners, [expected])
 
-    def test_root_requires_approval_without_suppressing_training_or_security(self):
-        roots = [row for row in self.config["packageRules"] if row.get("dependencyDashboardApproval")]
+    def test_root_updates_automatically_without_suppressing_training_or_security(self):
+        roots = [row for row in self.config["packageRules"] if "dependencyDashboardApproval" in row]
         self.assertEqual(len(roots), 1)
         root = roots[0]
+        self.assertIs(root["dependencyDashboardApproval"], False)
         self.assertTrue(self.config["dependencyDashboard"])
         self.assertIn("**/*", root["matchFileNames"])
         self.assertIn("!training/**", root["matchFileNames"])

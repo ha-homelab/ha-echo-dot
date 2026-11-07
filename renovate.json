@@ -43,8 +43,8 @@
       "schedule": [
         "* * * * 1"
       ],
-      "dependencyDashboardApproval": true,
-      "description": "Routine updates retain manual approval; security fixes bypass dashboard approval through the fleet policy."
+      "dependencyDashboardApproval": false,
+      "description": "Routine updates use automated dependency approval and merge after CI; security fixes retain the fleet vulnerability policy."
     },
     {
       "matchManagers": [
