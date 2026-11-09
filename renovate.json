@@ -225,6 +225,21 @@
         "requirements-tls-test.txt"
       ],
       "enabled": false
+    },
+    {
+      "description": [
+        "Host regression tests and their compiled lock target Python 3.11; filter dependency releases against that existing runtime."
+      ],
+      "matchManagers": [
+        "pip-compile"
+      ],
+      "matchFileNames": [
+        "requirements-host-tests.in"
+      ],
+      "constraints": {
+        "python": "3.11"
+      },
+      "constraintsFiltering": "strict"
     }
   ],
   "pip_requirements": {
