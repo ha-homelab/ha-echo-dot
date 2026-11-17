@@ -50,6 +50,8 @@ The USB host is needed for conversion and later USB maintenance, not as a perman
 
 ## Documentation
 
+Docs index: [docs/README.md](docs/README.md).
+
 Read these in order for the first device:
 
 1. [Hardware families and compatibility](docs/hardware-compatibility.md): identify the generation, choose a supported route, and understand wrong-image risks.

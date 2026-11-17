@@ -32,8 +32,11 @@ This repository preserves the **EchoLocal / Fire OS** conversion and training pa
 ## Research and maintenance
 
 - [Other ecosystem routes](../research/ecosystem.md), [Show 5 research](show5-plan.md) and the separate [Show 5 repository](https://github.com/ha-homelab/ha-echo-show-5).
+- [Strict training artifact transport](strict-training-tls.md): the optional `ECHO_DOT_STRICT_TLS=1` profile for owned training data.
 - [Contributing](../CONTRIBUTING.md), [translation policy](i18n.md), [security reporting](../SECURITY.md) and [security design](security-design.md).
 - [Publication allowlist](publication.md), [release strategy](../RELEASING.md), [versioning](VERSIONING.md), [release workflow](release-workflow.md) and [RC fuzzing](fuzzing.md).
+- [Dependency updates](ci-dependency-updates.md): the shared Renovate preset for Actions and packages.
+- [Quality evidence and limitations](quality.md): what host CI covers and what it does not.
 - [Third-party notices](../THIRD_PARTY_NOTICES.md) and [OpenSSF evidence](openssf-evidence.md).
 
 The SVG is an architecture illustration, not a measurement. Benchmark and validation numbers belong to the dated experiment that produced them. Device availability, keys and household inventories remain private.
