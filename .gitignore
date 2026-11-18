@@ -90,3 +90,4 @@ release-assets/
 .release-plan.json
 .release-inputs.json
 .fuzz-venv/
+A*S.md
