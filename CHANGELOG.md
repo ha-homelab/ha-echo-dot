@@ -1,7 +1,29 @@
 # Changelog
 
-## [0.1.6] - Unreleased
+## [0.1.7] - Unreleased
 
+### Changed
+
+- keep local instruction files out of git.
+- add a navigation index for docs/.
+- respect host-test Python compatibility in Renovate (#161).
+- allow automated routine Python dependency approval (#153).
+- verify current default branch before reviewed merges (#152).
+- preserve automerge withdrawal after base advances (#151).
+- recover reviewed dependency merges after delayed checks (#150).
+- classify governance and roadmap changes as documentation (#147).
+- skip heavy validation for documentation-only changes (#146).
+- Complete dependency update migration to Renovate (#145).
+
+### Upgrade
+
+Unpack the verified public host-tools archive into a new directory and recreate the documented locked environment. Preserve operator configuration, local models and audio separately. Keep the previous immutable release available for rollback; firmware conversion, training and device deployment remain explicit operations.
+
+### Security
+
+Verify the archive checksum and retain hash-checked dependency installation and artifact-download TLS verification. This source release contains only the public allowlist; it does not establish TensorFlow training, model parity, acoustic or hardware acceptance.
+
+## [0.1.6] - 2026-11-03
 ### Changed
 
 - Update the published macOS ARM64 training lock from filelock 4.2.4 to 4.2.7, grpcio 1.85.0 to 1.85.1, and hf-xet 1.7.1 to 1.8.0. Preserve the Python 3.11 reference platform and existing TensorFlow, NumPy and model constraints.
