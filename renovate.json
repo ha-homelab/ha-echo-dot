@@ -218,7 +218,6 @@
       "matchFileNames": [
         "--output-file=.github/requirements-host-tools.txt",
         ".github/requirements-host-tools.txt",
-        ".github/requirements-wheels-only.in",
         "requirements-host-tests.in",
         "requirements-host-tests.txt",
         "requirements-lint.txt",
@@ -254,7 +253,6 @@
       ".github/cosign/**",
       "--output-file=.github/requirements-host-tools.txt",
       ".github/requirements-host-tools.txt",
-      ".github/requirements-wheels-only.in",
       "requirements-host-tests.in",
       "requirements-host-tests.txt",
       "requirements-lint.txt",

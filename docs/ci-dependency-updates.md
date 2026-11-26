@@ -10,4 +10,4 @@ If an update fails, compare all CodeQL step references and, where present, the r
 
 Keep the version comment on every SHA-pinned action (`# vX.Y.Z`) and the `# main` comment on toolkit workflow references. Renovate uses these comments as version metadata; removing them can make a dependency ineligible for updates even though the workflow still executes. Verify the upstream tag-to-SHA mapping before restoring a missing version comment.
 
-The host-tools inputs `requirements-lint.txt` and `requirements-tls-test.txt` are refreshed with `.github/requirements-host-tools.txt` by the native pip-compile manager. The scoped `.github/requirements-wheels-only.in` input preserves binary-only resolution; [CONTRIBUTING.md](../CONTRIBUTING.md) records the same regeneration command.
+The host-tools inputs `requirements-lint.txt` and `requirements-tls-test.txt` are refreshed with `.github/requirements-host-tools.txt` by the native pip-compile manager. Binary-only resolution is part of the recorded compile command (`--only-binary=:all:`), so the lock has no dependency-free input file; [CONTRIBUTING.md](../CONTRIBUTING.md) records the same regeneration command.
