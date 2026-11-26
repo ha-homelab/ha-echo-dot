@@ -1,2 +1,0 @@
-# Preserve the binary-only resolver policy for these compiled locks.
---only-binary :all:

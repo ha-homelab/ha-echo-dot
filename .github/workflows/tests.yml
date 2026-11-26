@@ -33,10 +33,10 @@ jobs:
       - name: Verify the complete host-tools lock
         run: |
           cp .github/requirements-host-tools.txt "$RUNNER_TEMP/requirements-host-tools.txt"
-          uv pip compile requirements-tls-test.txt requirements-lint.txt .github/requirements-wheels-only.in \
+          uv pip compile --only-binary=:all: requirements-tls-test.txt requirements-lint.txt \
             --python-version=3.11 --universal --generate-hashes --no-annotate \
             --constraint .github/requirements-host-tools.txt \
-            --custom-compile-command 'uv pip compile requirements-tls-test.txt requirements-lint.txt .github/requirements-wheels-only.in --python-version=3.11 --universal --generate-hashes --output-file=.github/requirements-host-tools.txt' \
+            --custom-compile-command 'uv pip compile --only-binary=:all: requirements-tls-test.txt requirements-lint.txt --python-version=3.11 --universal --generate-hashes --output-file=.github/requirements-host-tools.txt' \
             --output-file "$RUNNER_TEMP/requirements-host-tools.txt" --quiet
           python - <<'PYCODE'
           import os
